@@ -1,13 +1,20 @@
+import android.annotation.SuppressLint
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -16,12 +23,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kedokato_dev.houcheck.R
+import com.kedokato_dev.houcheck.ui.viewmodel.LoginStatus
+import com.kedokato_dev.houcheck.ui.viewmodel.LoginViewModel
+import kotlinx.coroutines.launch
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun LoginScreen() {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
+fun LoginScreen(viewModel: LoginViewModel = viewModel()) {
+    val username = viewModel.username.collectAsState()
+    val password = viewModel.password.collectAsState()
+    val loginStatus = viewModel.loginStatus.collectAsState()
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var passwordVisible = remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -39,7 +57,7 @@ fun LoginScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                painter = painterResource(id = com.kedokato_dev.houcheck.R.drawable._3_mo_ha_noi),
+                painter = painterResource(id = R.drawable._3_mo_ha_noi),
                 contentDescription = "Logo Trường",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
@@ -66,8 +84,8 @@ fun LoginScreen() {
             )
 
             OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
+                value = username.value,
+                onValueChange = { viewModel.onUsernameChanged(it) },
                 label = { Text("Mã sinh viên") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -77,32 +95,36 @@ fun LoginScreen() {
             )
 
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = password.value,
+                onValueChange = { viewModel.onPasswordChanged(it) },
                 label = { Text("Mật khẩu") },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 trailingIcon = {
-                    val image = if (passwordVisible) {
-                        painterResource(id = com.kedokato_dev.houcheck.R.drawable.baseline_visibility_24)
+                    val image = if (passwordVisible.value) {
+                        painterResource(id = R.drawable.baseline_visibility_24)
                     } else {
-                        painterResource(id = com.kedokato_dev.houcheck.R.drawable.outline_visibility_off_24)
+                        painterResource(id = R.drawable.outline_visibility_off_24)
                     }
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    IconButton(onClick = { passwordVisible.value = !passwordVisible.value }) {
                         Icon(
                             painter = image,
-                            contentDescription = if (passwordVisible) "Ẩn mật khẩu" else "Hiện mật khẩu"
+                            contentDescription = if (passwordVisible.value) "Ẩn mật khẩu" else "Hiện mật khẩu"
                         )
                     }
                 }
             )
 
             Button(
-                onClick = { /* Xử lý đăng nhập */ },
+                onClick = {
+                    coroutineScope.launch {
+                        viewModel.login()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -110,6 +132,35 @@ fun LoginScreen() {
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text("Đăng nhập", fontSize = 16.sp)
+            }
+
+            // Handle Login Status
+            when (val status = loginStatus.value) {
+                is LoginStatus.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .size(24.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                is LoginStatus.Success -> {
+                    Toast.makeText(context, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
+                    // Navigate to the next screen
+                    val sessionId = getSessionId(context)
+                    if (sessionId != null) {
+                        Toast.makeText(context, "Session ID: $sessionId", Toast.LENGTH_SHORT).show()
+
+                    } else {
+                        Toast.makeText(context, "Session ID chưa được lưu", Toast.LENGTH_SHORT).show()
+
+                    }
+
+                }
+                is LoginStatus.Error -> {
+                    Toast.makeText(context, status.message, Toast.LENGTH_SHORT).show()
+                }
+                else -> { /* Do nothing */ }
             }
 
             Text(
@@ -122,6 +173,11 @@ fun LoginScreen() {
             )
         }
     }
+}
+
+fun getSessionId(context: Context): String? {
+    val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+    return sharedPreferences.getString("session_id", null)
 }
 
 @Preview(showSystemUi = true, showBackground = true)
