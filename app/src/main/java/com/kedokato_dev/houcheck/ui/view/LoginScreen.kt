@@ -1,4 +1,5 @@
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,14 +26,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.ui.viewmodel.LoginStatus
 import com.kedokato_dev.houcheck.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
 
-@SuppressLint("StateFlowValueCalledInComposition")
+
 @Composable
-fun LoginScreen(viewModel: LoginViewModel = viewModel()) {
+fun LoginScreen(viewModel: LoginViewModel , navController: NavHostController) {
     val username = viewModel.username.collectAsState()
     val password = viewModel.password.collectAsState()
     val loginStatus = viewModel.loginStatus.collectAsState()
@@ -146,16 +150,9 @@ fun LoginScreen(viewModel: LoginViewModel = viewModel()) {
                 }
                 is LoginStatus.Success -> {
                     Toast.makeText(context, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
-                    // Navigate to the next screen
-                    val sessionId = getSessionId(context)
-                    if (sessionId != null) {
-                        Toast.makeText(context, "Session ID: $sessionId", Toast.LENGTH_SHORT).show()
-
-                    } else {
-                        Toast.makeText(context, "Session ID chưa được lưu", Toast.LENGTH_SHORT).show()
-
+                    LaunchedEffect(Unit) {
+                        navController.navigate("home")
                     }
-
                 }
                 is LoginStatus.Error -> {
                     Toast.makeText(context, status.message, Toast.LENGTH_SHORT).show()
@@ -184,6 +181,8 @@ fun getSessionId(context: Context): String? {
 @Composable
 fun PreviewLoginScreen() {
     MaterialTheme {
-        LoginScreen()
+       var fakeNavController = NavHostController(LocalContext.current)
+//        var fakeViewModel = LoginViewModel
+//        LoginScreen(fakeViewModel,fakeNavController)
     }
 }

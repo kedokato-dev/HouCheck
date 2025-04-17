@@ -1,15 +1,11 @@
 package com.kedokato_dev.houcheck
 
-import LoginScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.kedokato_dev.houcheck.ui.view.StudentProfileHeader
+import androidx.navigation.compose.rememberNavController
+import com.kedokato_dev.houcheck.navhost.AppNavigation
 import com.kedokato_dev.houcheck.ui.theme.HouCheckTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,19 +14,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HouCheckTheme {
-                   LoginScreen()
-                }
+                val navController = rememberNavController()
+                AppNavigation(navController = navController)
             }
         }
     }
-
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    HouCheckTheme {
-
-    }
 }
+
+
+
+
+//@Preview(showBackground = true)
+//@Composable
+//fun GreetingPreview() {
+//    HouCheckTheme {
+//
+//    }
+//}

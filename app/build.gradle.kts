@@ -46,9 +46,13 @@ dependencies {
 
     implementation ("androidx.compose.material3:material3:1.2.0-alpha03")
 
+    // Navigation
+    implementation(libs.navigation.compose)
+
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.navigation.runtime.ktx)
     kapt(libs.androidx.room.compiler)
 
     // Retrofit

@@ -12,36 +12,35 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
+import androidx.core.content.edit
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
-    // State for username and password
     private val _username = MutableStateFlow("")
     val username: StateFlow<String> get() = _username
 
     private val _password = MutableStateFlow("")
     val password: StateFlow<String> get() = _password
 
-    // State for login status
     private val _loginStatus = MutableStateFlow<LoginStatus>(LoginStatus.Idle)
     val loginStatus: StateFlow<LoginStatus> get() = _loginStatus
 
-    // Lazy initialization of ApiService
+
     private val apiService: ApiService by lazy {
         ApiClient.instance.create(ApiService::class.java)
     }
 
-    // Handle username changes
+
     fun onUsernameChanged(newUsername: String) {
         _username.value = newUsername
     }
 
-    // Handle password changes
+
     fun onPasswordChanged(newPassword: String) {
         _password.value = newPassword
     }
 
-    // Perform login operation
+
     fun login() {
         if (_username.value.isBlank() || _password.value.isBlank()) {
             _loginStatus.value = LoginStatus.Error("Username hoặc Password không được để trống!")
@@ -70,18 +69,18 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Save session ID to SharedPreferences
+
     private fun saveSessionId(sessionId: String) {
         val sharedPreferences = getApplication<Application>()
             .getSharedPreferences("AppPreferences", Application.MODE_PRIVATE)
 
-        sharedPreferences.edit()
-            .putString("session_id", sessionId)
-            .apply()
+        sharedPreferences.edit {
+            putString("session_id", sessionId)
+        }
     }
 }
 
-// Define the login states
+
 sealed class LoginStatus {
     object Idle : LoginStatus()
     object Loading : LoginStatus()
