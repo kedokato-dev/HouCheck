@@ -59,6 +59,7 @@ fun LoginScreen(navHostController: NavHostController) {
     ) {
 
         Text("Login", style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = username,
