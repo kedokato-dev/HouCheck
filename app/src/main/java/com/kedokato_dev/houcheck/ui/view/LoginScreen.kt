@@ -1,188 +1,109 @@
-import android.annotation.SuppressLint
-import android.app.Application
-import android.content.Context
+package com.kedokato_dev.houcheck.ui
+
 import android.widget.Toast
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.kedokato_dev.houcheck.R
-import com.kedokato_dev.houcheck.ui.viewmodel.LoginStatus
-import com.kedokato_dev.houcheck.ui.viewmodel.LoginViewModel
-import kotlinx.coroutines.launch
-
+import com.kedokato_dev.houcheck.data.repository.AuthRepository
+import com.kedokato_dev.houcheck.ui.viewmodel.AuthViewModel
+import com.kedokato_dev.houcheck.ui.viewmodel.AuthViewModelFactory
+import com.kedokato_dev.houcheck.ui.viewmodel.LoginState
 
 @Composable
-fun LoginScreen(viewModel: LoginViewModel , navController: NavHostController) {
-    val username = viewModel.username.collectAsState()
-    val password = viewModel.password.collectAsState()
-    val loginStatus = viewModel.loginStatus.collectAsState()
-
+fun LoginScreen(navHostController: NavHostController) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
 
-    var passwordVisible = remember { mutableStateOf(false) }
+    // Tạo AuthRepository
+    val authRepository = remember { AuthRepository() }
 
-    Box(
+    // Tạo AuthViewModel với factory
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(authRepository)
+    )
+
+    val loginState by authViewModel.loginState.collectAsState()
+
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    // UI Layout
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(20.dp))
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next,
+                keyboardType = KeyboardType.Text
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Password
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                authViewModel.login(username, password)
+            },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Image(
-                painter = painterResource(id = R.drawable._3_mo_ha_noi),
-                contentDescription = "Logo Trường",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .size(100.dp)
-                    .padding(bottom = 16.dp)
-            )
-
-            Text(
-                text = "Hou Check",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
-                ),
-                modifier = Modifier.padding(bottom = 16.dp),
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Text(
-                text = "Ứng dụng xem lịch học của sinh viên",
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 24.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            OutlinedTextField(
-                value = username.value,
-                onValueChange = { viewModel.onUsernameChanged(it) },
-                label = { Text("Mã sinh viên") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                value = password.value,
-                onValueChange = { viewModel.onPasswordChanged(it) },
-                label = { Text("Mật khẩu") },
-                visualTransformation = if (passwordVisible.value) VisualTransformation.None else PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                shape = RoundedCornerShape(12.dp),
-                singleLine = true,
-                trailingIcon = {
-                    val image = if (passwordVisible.value) {
-                        painterResource(id = R.drawable.baseline_visibility_24)
-                    } else {
-                        painterResource(id = R.drawable.outline_visibility_off_24)
-                    }
-                    IconButton(onClick = { passwordVisible.value = !passwordVisible.value }) {
-                        Icon(
-                            painter = image,
-                            contentDescription = if (passwordVisible.value) "Ẩn mật khẩu" else "Hiện mật khẩu"
-                        )
-                    }
-                }
-            )
-
-            Button(
-                onClick = {
-                    coroutineScope.launch {
-                        viewModel.login()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text("Đăng nhập", fontSize = 16.sp)
-            }
-
-            // Handle Login Status
-            when (val status = loginStatus.value) {
-                is LoginStatus.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(top = 16.dp)
-                            .size(24.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                is LoginStatus.Success -> {
-                    Toast.makeText(context, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
-                    LaunchedEffect(Unit) {
-                        navController.navigate("home")
-                    }
-                }
-                is LoginStatus.Error -> {
-                    Toast.makeText(context, status.message, Toast.LENGTH_SHORT).show()
-                }
-                else -> { /* Do nothing */ }
-            }
-
-            Text(
-                text = "Version 1.0.0",
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .align(Alignment.CenterHorizontally),
-            )
+            Text(text = "Login")
         }
-    }
-}
 
-fun getSessionId(context: Context): String? {
-    val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
-    return sharedPreferences.getString("session_id", null)
-}
+        Spacer(modifier = Modifier.height(16.dp))
 
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun PreviewLoginScreen() {
-    MaterialTheme {
-       var fakeNavController = NavHostController(LocalContext.current)
-//        var fakeViewModel = LoginViewModel
-//        LoginScreen(fakeViewModel,fakeNavController)
+        when (loginState) {
+            is LoginState.Idle -> {
+                // Do nothing for Idle state
+            }
+            is LoginState.Loading -> {
+                CircularProgressIndicator()
+            }
+            is LoginState.Success -> {
+                Toast.makeText(context, "Login successful: ${(loginState as LoginState.Success).sessionId}", Toast.LENGTH_LONG).show()
+                // Navigate to the next screen or perform any action on success
+                navHostController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+
+            }
+            is LoginState.Error -> {
+                Toast.makeText(context, "Error: ${(loginState as LoginState.Error).message}", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 }

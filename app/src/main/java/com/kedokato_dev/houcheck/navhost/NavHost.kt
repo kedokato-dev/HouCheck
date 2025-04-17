@@ -1,6 +1,6 @@
 package com.kedokato_dev.houcheck.navhost
 
-import LoginScreen
+
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -8,8 +8,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.kedokato_dev.houcheck.ui.LoginScreen
 import com.kedokato_dev.houcheck.ui.view.HomeScreen
-import com.kedokato_dev.houcheck.ui.viewmodel.LoginViewModel
+
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
@@ -18,7 +19,7 @@ fun AppNavigation(navController: NavHostController) {
             HomeScreen(navController)
         }
         composable("login") {
-            LoginScreen(viewModel(), navController)
+            LoginScreen(navController)
         }
     }
 }
