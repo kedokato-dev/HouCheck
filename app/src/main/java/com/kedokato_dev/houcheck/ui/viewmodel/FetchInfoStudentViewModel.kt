@@ -47,28 +47,3 @@ class FetchInfoStudentViewModel(
         }
     }
 }
-//
-//class FetchInfoStudentViewModel(private val repository: FetchStudentInfoRepository): ViewModel() {
-//    private val _fetchState = MutableStateFlow<FetchState>(FetchState.Idle)
-//    val fetchState: StateFlow<FetchState> get() = _fetchState
-//
-//    fun fetchInfoStudent(sessionId: String) {
-//        if (sessionId.isBlank()) {
-//            _fetchState.value = FetchState.Error("Session ID cannot be empty")
-//            return
-//        }
-//
-//        _fetchState.value = FetchState.Loading
-//
-//        viewModelScope.launch {
-//            val result = repository.fetchInfoStudent(sessionId)
-//            _fetchState.value = result.fold(
-//                onSuccess = { studentResponse ->
-//                    FetchState.Success(studentResponse.toStudent()) // Chuyển đổi từ StudentResponse sang Student
-//                },
-//                onFailure = { error -> FetchState.Error(error.message ?: "Unknown error") }
-//            )
-//        }
-//    }
-//
-//}

@@ -98,7 +98,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
         Button(
             onClick = {
-                authViewModel.login("22a1001d0275", "quandeptrai19@")
+                authViewModel.login(username, password)
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -115,11 +115,6 @@ fun LoginScreen(navHostController: NavHostController) {
                 CircularProgressIndicator()
             }
             is LoginState.Success -> {
-                Toast.makeText(context, "Login successful: ${(loginState as LoginState.Success).sessionId}", Toast.LENGTH_LONG).show()
-                // Navigate to the next screen or perform any action on success
-//                navHostController.navigate("home") {
-//                    popUpTo("login") { inclusive = true }
-//                }
                navHostController.navigate("studentInfo")
 
             }
