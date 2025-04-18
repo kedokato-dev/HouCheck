@@ -35,4 +35,12 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             )
         }
     }
+
+    fun getSessionId(): String? {
+        return repository.getSessionId()
+    }
+
+    fun logout() {
+        repository.clearSession()
+    }
 }

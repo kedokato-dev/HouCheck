@@ -1,5 +1,7 @@
 package com.kedokato_dev.houcheck.ui
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,9 +37,12 @@ import com.kedokato_dev.houcheck.ui.viewmodel.LoginState
 @Composable
 fun LoginScreen(navHostController: NavHostController) {
     val context = LocalContext.current
+    val sharedPreferences = remember {
+        context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
+    }
 
-    // Tạo AuthRepository
-    val authRepository = remember { AuthRepository() }
+
+    val authRepository = remember { AuthRepository(sharedPreferences) }
 
     // Tạo AuthViewModel với factory
     val authViewModel: AuthViewModel = viewModel(
@@ -93,7 +98,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
         Button(
             onClick = {
-                authViewModel.login(username, password)
+                authViewModel.login("22a1001d0275", "quandeptrai19@")
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -112,9 +117,10 @@ fun LoginScreen(navHostController: NavHostController) {
             is LoginState.Success -> {
                 Toast.makeText(context, "Login successful: ${(loginState as LoginState.Success).sessionId}", Toast.LENGTH_LONG).show()
                 // Navigate to the next screen or perform any action on success
-                navHostController.navigate("home") {
-                    popUpTo("login") { inclusive = true }
-                }
+//                navHostController.navigate("home") {
+//                    popUpTo("login") { inclusive = true }
+//                }
+               navHostController.navigate("studentInfo")
 
             }
             is LoginState.Error -> {
