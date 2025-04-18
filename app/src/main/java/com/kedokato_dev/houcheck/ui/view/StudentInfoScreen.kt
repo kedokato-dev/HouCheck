@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -57,6 +58,7 @@ fun StudentInfoScreen(navHostController: NavHostController) {
     }
 
     val authRepository = remember { AuthRepository(sharedPreferences) }
+
     val viewModel: FetchInfoStudentViewModel = viewModel(
         factory = FetchInfoStudentViewModelFactory(repository)
     )
@@ -64,20 +66,24 @@ fun StudentInfoScreen(navHostController: NavHostController) {
     val fetchState by viewModel.fetchState.collectAsState()
     val scrollState = rememberScrollState() // Thêm trạng thái cuộn
 
+    LaunchedEffect(Unit) {
+        viewModel.fetchInfoStudent(authRepository.getSessionId().toString())
+    }
+
     // Màu sắc hiện đại
-    val primaryColor = Color(0xFF5B21B6) // Tím đậm
-    val secondaryColor = Color(0xFF9333EA) // Tím nhạt hơn
+    val primaryColor = Color(0xFF03A9F4) // Tím đậm
+    val secondaryColor = Color(0xFF6DB4EC) // Tím nhạt hơn
     val gradientColors = listOf(primaryColor, secondaryColor)
 
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         "Hồ sơ sinh viên",
-                        fontSize = 24.sp,
+                        fontSize = 20.sp, // fontSize nhỏ lại cho phù hợp với SmallTopAppBar
                         fontWeight = FontWeight.Bold,
-                        lineHeight = 28.sp
+                        lineHeight = 24.sp
                     )
                 },
                 navigationIcon = {
@@ -89,12 +95,13 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                         )
                     }
                 },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = primaryColor,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
             )
+
         },
         containerColor = Color(0xFFF8F7FC) // Nền sáng cho toàn màn hình
     ) { paddingValues ->

@@ -16,6 +16,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -36,9 +37,9 @@ fun BottomNavigationBar(
         NavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp)
+                .height(84.dp)
                 .navigationBarsPadding(),
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = Color(0xFFFFFFFF),
             tonalElevation = 16.dp
         ) {
             items.forEach { item ->
@@ -76,3 +77,4 @@ fun BottomNavigationBar(
         }
     }
 }
+

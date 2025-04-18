@@ -25,7 +25,7 @@ import com.kedokato_dev.houcheck.ui.view.StudentInfoScreen
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val bottomBarState = rememberSaveable { mutableStateOf(false) }
-    val primaryColor = Color(0xFF5B21B6)
+    val primaryColor = Color(0xFF03A9F4)
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route

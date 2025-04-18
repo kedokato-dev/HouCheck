@@ -14,20 +14,9 @@ data class Student(
 
 data class StudentResponse(
     val success: Boolean,
-    val data: StudentData
+    val data: Student
 )
 
-data class StudentData(
-    val studentId: String,
-    val studentName: String,
-    val birthDate: String,
-    val sex: String,
-    val address: String,
-    val phone: String,
-    val userPhone: String,
-    val detailAddress: String,
-    val email: String
-)
 
 fun StudentResponse.toStudent(): Student {
     return Student(
