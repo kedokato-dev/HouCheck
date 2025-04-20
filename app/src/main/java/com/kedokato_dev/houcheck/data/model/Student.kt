@@ -1,5 +1,7 @@
 package com.kedokato_dev.houcheck.data.model
 
+import com.kedokato_dev.houcheck.database.entity.StudentEntity
+
 data class Student(
     val studentId: String,
     val studentName: String,
@@ -29,5 +31,19 @@ fun StudentResponse.toStudent(): Student {
         userPhone = data.userPhone,
         detailAddress = data.detailAddress,
         email = data.email
+    )
+}
+
+fun StudentEntity.toStudent(): Student {
+    return Student(
+        studentId = this.studentId,
+        studentName = this.studentName,
+        birthDate = this.birthDate,
+        sex = this.sex,
+        address = this.address,
+        phone = this.phone,
+        userPhone = this.userPhone,
+        detailAddress = this.detailAddress,
+        email = this.email
     )
 }

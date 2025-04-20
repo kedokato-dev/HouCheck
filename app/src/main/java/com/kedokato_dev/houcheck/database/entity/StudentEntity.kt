@@ -1,27 +1,38 @@
 package com.kedokato_dev.houcheck.database.entity
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.kedokato_dev.houcheck.data.model.Student
+
 
 @Entity(tableName = "profile")
 data class StudentEntity(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
-    @ColumnInfo(name = "fullName")
-    val fullName: String,
-    @ColumnInfo(name = "studentId")
+    val id: Int = 0,
     val studentId: String,
-    @ColumnInfo(name = "birthDate")
+    val studentName: String,
     val birthDate: String,
-    @ColumnInfo(name = "sex")
     val sex: String,
-    @ColumnInfo(name = "address")
     val address: String,
-    @ColumnInfo(name = "phoneUser")
-    val phoneUser: String,
-    @ColumnInfo(name = "phoneParent")
-    val phoneParent: String,
-    @ColumnInfo(name = "email")
+    val phone: String,
+    val userPhone: String,
+    val detailAddress: String,
     val email: String
 )
+
+
+
+fun Student.toEntity(): StudentEntity {
+    return StudentEntity(
+        studentId = this.studentId,
+        studentName = this.studentName,
+        birthDate = this.birthDate,
+        sex = this.sex,
+        address = this.address,
+        phone = this.phone,
+        userPhone = this.userPhone,
+        detailAddress = this.detailAddress,
+        email = this.email
+    )
+}
+

@@ -1,29 +1,38 @@
 package com.kedokato_dev.houcheck.data.repository
 
-import com.kedokato_dev.houcheck.data.api.ApiClient
 import com.kedokato_dev.houcheck.data.api.FetchInfoStudentService
-import com.kedokato_dev.houcheck.data.model.StudentResponse
+import com.kedokato_dev.houcheck.data.model.Student
+import com.kedokato_dev.houcheck.data.model.toStudent
+import com.kedokato_dev.houcheck.database.dao.StudentDAO
+import com.kedokato_dev.houcheck.database.entity.toEntity
 
-class FetchStudentInfoRepository {
-    private val fetchInfoStudentService: FetchInfoStudentService by lazy {
-        ApiClient.instance.create(FetchInfoStudentService::class.java)
+class FetchStudentInfoRepository(
+    private val api: FetchInfoStudentService,
+    private val dao: StudentDAO
+) {
+
+    suspend fun getLocalStudentById(): Student? {
+        return dao.getStudentById()?.toStudent()
     }
 
-    suspend fun fetchInfoStudent(sessionId: String): Result<StudentResponse> {
+    // Gọi API và lưu Room
+    suspend fun fetchAndSaveStudent(sessionId: String): Result<Student> {
         return try {
-            val response = fetchInfoStudentService.fetchInfoStudent(sessionId)
+            val response = api.fetchInfoStudent(sessionId)
             if (response.isSuccessful) {
-                val student = response.body()
-                if (student != null) {
+                val studentResponse = response.body()
+                studentResponse?.data?.let { student ->
+                    val entity = student.toEntity()
+                    dao.insertStudent(entity)
                     Result.success(student)
-                } else {
-                    Result.failure(Exception("Failed to parse student info"))
-                }
+                } ?: Result.failure(Exception("Student data is null"))
             } else {
-                Result.failure(Exception("Failed to fetch student info: ${response.message()}"))
+                Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
 }
+

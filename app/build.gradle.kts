@@ -2,7 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id ("kotlin-kapt") // Nếu đang sử dụng Room
+    id("kotlin-kapt")
+
 }
 
 android {
@@ -48,10 +49,11 @@ dependencies {
     implementation(libs.navigation.compose)
 
     // Room
-    implementation (libs.room.runtime)
-            kapt (libs.room.compiler) // Nếu đang sử dụng Kotlin
-            implementation (libs.room.ktx)
-            implementation (libs.room.paging)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx) // <== cái này là cái xử lý suspend
+    kapt(libs.room.compiler)
+
+
 
     // Retrofit
     implementation(libs.retrofit)

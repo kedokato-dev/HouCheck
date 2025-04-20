@@ -1,5 +1,7 @@
 package com.kedokato_dev.houcheck.ui.view
 
+import FetchInfoStudentViewModel
+import FetchState
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -7,7 +9,17 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +30,19 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,33 +65,40 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
+import com.kedokato_dev.houcheck.data.api.ApiClient
+import com.kedokato_dev.houcheck.data.api.FetchInfoStudentService
 import com.kedokato_dev.houcheck.data.model.Student
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchStudentInfoRepository
-import com.kedokato_dev.houcheck.ui.viewmodel.FetchInfoStudentViewModel
+import com.kedokato_dev.houcheck.database.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchInfoStudentViewModelFactory
-import com.kedokato_dev.houcheck.ui.viewmodel.FetchState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentInfoScreen(navHostController: NavHostController) {
     val context = LocalContext.current
-    val repository = remember { FetchStudentInfoRepository() }
     val sharedPreferences = remember {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
 
-    val authRepository = remember { AuthRepository(sharedPreferences) }
+    val api = remember { ApiClient.instance.create(FetchInfoStudentService::class.java) }
+    val dao = AppDatabase.buildDatabase(context).studentDAO()
+    val repository = remember { FetchStudentInfoRepository(api, dao) }
 
     val viewModel: FetchInfoStudentViewModel = viewModel(
         factory = FetchInfoStudentViewModelFactory(repository)
     )
 
+    val authRepository = remember { AuthRepository(sharedPreferences) }
+
     val fetchState by viewModel.fetchState.collectAsState()
-    val scrollState = rememberScrollState() // Thêm trạng thái cuộn
+
+    val scrollState = rememberScrollState()
+
 
     LaunchedEffect(Unit) {
-        viewModel.fetchInfoStudent(authRepository.getSessionId().toString())
+        viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
+        Toast.makeText(context, "Session ID: ${authRepository.getSessionId().toString()}", Toast.LENGTH_SHORT).show()
     }
 
     // Màu sắc hiện đại
@@ -110,15 +141,15 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Bọc nội dung chính trong verticalScroll để có thể cuộn
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState) // Thêm khả năng cuộn
+                    .verticalScroll(scrollState) 
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Phần thông tin cá nhân với nền gradient
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -192,7 +223,7 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                     is FetchState.Idle -> {
                         EmptyStateSection(
                             onFetchClick = {
-                                viewModel.fetchInfoStudent(authRepository.getSessionId().toString())
+                                viewModel.fetchStudentIfNeeded(sharedPreferences.toString())
                             },
                             primaryColor = primaryColor
                         )
@@ -209,7 +240,7 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                         ErrorStateSection(
                             message = (fetchState as FetchState.Error).message,
                             onRetryClick = {
-                                viewModel.fetchInfoStudent(authRepository.getSessionId().toString())
+                                viewModel.fetchStudentIfNeeded(sharedPreferences.toString())
                             },
                             primaryColor = primaryColor
                         )

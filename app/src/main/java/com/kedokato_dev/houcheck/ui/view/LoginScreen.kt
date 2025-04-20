@@ -101,7 +101,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
         Button(
             onClick = {
-                authViewModel.login(username, password)
+                authViewModel.login("22a1001d0275", "quandeptrai19@")
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -119,6 +119,7 @@ fun LoginScreen(navHostController: NavHostController) {
             }
             is LoginState.Success -> {
                navHostController.navigate("home")
+                Toast.makeText(context, "${authRepository.getSessionId()}", Toast.LENGTH_LONG).show()
 
             }
             is LoginState.Error -> {

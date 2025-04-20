@@ -1,5 +1,6 @@
 package com.kedokato_dev.houcheck.ui.viewmodel
 
+import FetchInfoStudentViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.kedokato_dev.houcheck.data.repository.FetchStudentInfoRepository

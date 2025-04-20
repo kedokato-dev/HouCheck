@@ -45,10 +45,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
-import com.kedokato_dev.houcheck.data.repository.FetchStudentInfoRepository
-import com.kedokato_dev.houcheck.data.repository.FetchStudentNameRepository
-import com.kedokato_dev.houcheck.ui.viewmodel.FetchInfoStudentViewModel
-import com.kedokato_dev.houcheck.ui.viewmodel.FetchInfoStudentViewModelFactory
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchNameStudentViewModel
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchStudentNameState
 

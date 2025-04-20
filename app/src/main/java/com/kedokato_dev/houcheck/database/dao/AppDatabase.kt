@@ -17,6 +17,8 @@ private const val DATABASE_VERSION = 1
 abstract class AppDatabase : RoomDatabase() {
     abstract fun studentDAO(): StudentDAO
 
+    abstract fun testDAO(): TestDao
+
     companion object {
         private var instance: AppDatabase? = null
 
