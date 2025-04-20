@@ -1,5 +1,6 @@
 package com.kedokato_dev.houcheck.ui.view
 
+import FetchInfoStudentViewModel
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -28,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +46,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
+import com.kedokato_dev.houcheck.data.api.ApiClient
+import com.kedokato_dev.houcheck.data.api.FetchInfoStudentService
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
+import com.kedokato_dev.houcheck.data.repository.FetchStudentInfoRepository
+import com.kedokato_dev.houcheck.database.dao.AppDatabase
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchInfoStudentViewModelFactory
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchNameStudentViewModel
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchStudentNameState
 
@@ -52,23 +59,42 @@ import com.kedokato_dev.houcheck.ui.viewmodel.FetchStudentNameState
 fun HomeScreen(navController: NavHostController) {
     var context = LocalContext.current
 
-    val viewModel: FetchNameStudentViewModel = viewModel ()
-
-    val fetchNameState = viewModel.fetchNameState.collectAsState()
 
     val sharedPreferences = remember {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
 
+    val api = remember { ApiClient.instance.create(FetchInfoStudentService::class.java) }
+    val dao = AppDatabase.buildDatabase(context).studentDAO()
+    val repository = remember { FetchStudentInfoRepository(api, dao) }
+
+    val viewModel: FetchInfoStudentViewModel = viewModel(
+        factory = FetchInfoStudentViewModelFactory(repository)
+    )
     val authRepository = remember { AuthRepository(sharedPreferences) }
 
+    val fetchState by viewModel.fetchState.collectAsState()
+
+    // Màu sắc hiện đại
+    val primaryColor = Color(0xFF03A9F4) // Tím đậm
+    val secondaryColor = Color(0xFF6DB4EC) // Tím nhạt hơn
+    val gradientColors = listOf(primaryColor, secondaryColor)
+
+
     LaunchedEffect(Unit) {
-        viewModel.fetchNameStudent(authRepository.getSessionId().toString())
+        viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
+        Toast.makeText(
+            context,
+            "Session ID: ${authRepository.getSessionId().toString()}",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .background(Color(0xFFF5F5F5))) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+    ) {
         // Header Section
         Row(
             modifier = Modifier
@@ -90,21 +116,23 @@ fun HomeScreen(navController: NavHostController) {
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                when (val state = fetchNameState.value) {
-                    is FetchStudentNameState.Success -> {
+                when (fetchState) {
+                    is FetchState.Success -> {
+                        val student = (fetchState as FetchState.Success).student
                         Text(
-                            text = state.studentName.name,
+                            text = student.studentName.toString(),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
-                            text = "MSV: ${state.studentName.studentId}",
+                            text = "MSV: ${student.studentId}",
                             fontSize = 14.sp,
                             color = Color.White
                         )
                     }
-                    is FetchStudentNameState.Loading -> {
+
+                    is FetchState.Loading -> {
                         Text(
                             text = "Loading...",
                             fontSize = 18.sp,
@@ -112,14 +140,16 @@ fun HomeScreen(navController: NavHostController) {
                             color = Color.White
                         )
                     }
-                    is FetchStudentNameState.Error -> {
+
+                    is FetchState.Error -> {
                         Text(
-                            text = "Error: ${state.message}",
+                            text = (fetchState as FetchState.Error).message,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Red
+                            color = Color.White
                         )
                     }
+
                     else -> {
                         Text(
                             text = "No data",
@@ -187,6 +217,7 @@ fun HomeScreen(navController: NavHostController) {
                                 "Chức năng đang phát triển",
                                 Toast.LENGTH_SHORT
                             ).show()
+
                             6 -> Toast.makeText(
                                 context,
                                 "Chức năng đang phát triển",
