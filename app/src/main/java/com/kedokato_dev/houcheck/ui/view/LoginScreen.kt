@@ -101,7 +101,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
         Button(
             onClick = {
-                authViewModel.login("22a1001d0275", "quandeptrai19@")
+                authViewModel.login("22a1001d0250", "30082004phong")
             },
             modifier = Modifier.fillMaxWidth()
         ) {

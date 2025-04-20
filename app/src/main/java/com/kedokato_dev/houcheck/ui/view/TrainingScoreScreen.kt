@@ -1,13 +1,33 @@
 package com.kedokato_dev.houcheck.ui.view
 
 import android.content.Context
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,16 +45,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.kedokato_dev.houcheck.data.api.ApiClient
+import com.kedokato_dev.houcheck.data.api.FetchTrainingScoreService
 import com.kedokato_dev.houcheck.data.model.TrainingScore
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchTrainingScoreRepository
-import com.kedokato_dev.houcheck.ui.viewmodel.*
+import com.kedokato_dev.houcheck.database.dao.AppDatabase
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchTrainingScoreState
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchTrainingScoreViewModel
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchTrainingScoreViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainingScoreScreen(navController: NavHostController) {
     val context = LocalContext.current
-    val repository = remember { FetchTrainingScoreRepository() }
+    val api = remember { ApiClient.instance.create(FetchTrainingScoreService::class.java) }
+    val dao = AppDatabase.buildDatabase(context).trainingScoreDAO()
+    val repository = remember {
+        FetchTrainingScoreRepository(
+            api, dao
+        )
+    }
     val sharedPreferences = remember {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
@@ -99,14 +130,18 @@ fun TrainingScoreScreen(navController: NavHostController) {
                     is FetchTrainingScoreState.Idle -> {
                         EmptyStateSection(
                             onFetchClick = {
-                                viewModel.fetchTrainingScore(authRepository.getSessionId().toString())
+                                viewModel.fetchTrainingScore(
+                                    authRepository.getSessionId().toString()
+                                )
                             },
                             primaryColor = primaryColor
                         )
                     }
+
                     is FetchTrainingScoreState.Loading -> {
                         LoadingStateSection(primaryColor = primaryColor)
                     }
+
                     is FetchTrainingScoreState.Success -> {
                         val scores = (fetchState as FetchTrainingScoreState.Success).scores
                         scores.forEach { score ->
@@ -114,11 +149,14 @@ fun TrainingScoreScreen(navController: NavHostController) {
                             Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
+
                     is FetchTrainingScoreState.Error -> {
                         ErrorStateSection(
                             message = (fetchState as FetchTrainingScoreState.Error).message,
                             onRetryClick = {
-                                viewModel.fetchTrainingScore(authRepository.getSessionId().toString())
+                                viewModel.fetchTrainingScore(
+                                    authRepository.getSessionId().toString()
+                                )
                             },
                             primaryColor = primaryColor
                         )
@@ -248,7 +286,12 @@ private fun ErrorStateSection(message: String, onRetryClick: () -> Unit, primary
             onClick = onRetryClick,
             border = ButtonDefaults.outlinedButtonBorder.copy(
                 width = 2.dp,
-                brush = Brush.horizontalGradient(listOf(primaryColor, primaryColor.copy(alpha = 0.7f)))
+                brush = Brush.horizontalGradient(
+                    listOf(
+                        primaryColor,
+                        primaryColor.copy(alpha = 0.7f)
+                    )
+                )
             ),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.height(48.dp)
