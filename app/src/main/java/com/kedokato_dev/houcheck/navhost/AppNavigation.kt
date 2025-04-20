@@ -21,6 +21,7 @@ import com.kedokato_dev.houcheck.ui.LoginScreen
 import com.kedokato_dev.houcheck.ui.view.HomeScreen
 import com.kedokato_dev.houcheck.ui.view.SettingScreen
 import com.kedokato_dev.houcheck.ui.view.StudentInfoScreen
+import com.kedokato_dev.houcheck.ui.view.TrainingScoreScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
@@ -53,6 +54,7 @@ fun AppNavigation(navController: NavHostController) {
                 composable("login") { LoginScreen(navController) }
                 composable("studentInfo") { StudentInfoScreen(navController) }
                 composable("settings") { SettingScreen() }
+                composable("training_score") { TrainingScoreScreen(navController) }
             }
         }
     }

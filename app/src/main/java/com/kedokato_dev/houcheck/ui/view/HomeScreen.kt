@@ -162,6 +162,7 @@ fun HomeScreen(navController: NavHostController) {
                 FeatureItem("Xem điểm học tập", R.drawable.a_plus_result_svgrepo_com),
                 FeatureItem("Xem học phí", R.drawable.pig_piggy_bank_svgrepo_com),
                 FeatureItem("Xem lịch thi", R.drawable.schedule_date_svgrepo_com),
+                FeatureItem("Điểm rèn luyện", R.drawable.a_plus_result_svgrepo_com),
                 FeatureItem("Tin tức", R.drawable.newspaper_news_svgrepo_com),
                 FeatureItem("Donate", R.drawable.coffe_svgrepo_com),
             )
@@ -180,14 +181,13 @@ fun HomeScreen(navController: NavHostController) {
                             1 -> navController.navigate("result")
                             2 -> navController.navigate("tuition")
                             3 -> navController.navigate("exam_schedule")
-
-                            4 -> Toast.makeText(
+                            4 -> navController.navigate("training_score")
+                            5 -> Toast.makeText(
                                 context,
                                 "Chức năng đang phát triển",
                                 Toast.LENGTH_SHORT
                             ).show()
-
-                            5 -> Toast.makeText(
+                            6 -> Toast.makeText(
                                 context,
                                 "Chức năng đang phát triển",
                                 Toast.LENGTH_SHORT
