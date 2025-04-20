@@ -2,9 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
-
-    id("kotlin-kapt")
+    id ("kotlin-kapt") // Nếu đang sử dụng Room
 }
 
 android {
@@ -50,10 +48,10 @@ dependencies {
     implementation(libs.navigation.compose)
 
     // Room
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    implementation(libs.androidx.navigation.runtime.ktx)
-    kapt(libs.androidx.room.compiler)
+    implementation (libs.room.runtime)
+            kapt (libs.room.compiler) // Nếu đang sử dụng Kotlin
+            implementation (libs.room.ktx)
+            implementation (libs.room.paging)
 
     // Retrofit
     implementation(libs.retrofit)
@@ -84,3 +82,4 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
