@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.kedokato_dev.houcheck.ui.LoginScreen
 import com.kedokato_dev.houcheck.ui.view.HomeScreen
+import com.kedokato_dev.houcheck.ui.view.ScoreScreen
 import com.kedokato_dev.houcheck.ui.view.SettingScreen
 import com.kedokato_dev.houcheck.ui.view.StudentInfoScreen
 import com.kedokato_dev.houcheck.ui.view.TrainingScoreScreen
@@ -55,6 +56,7 @@ fun AppNavigation(navController: NavHostController) {
                 composable("studentInfo") { StudentInfoScreen(navController) }
                 composable("settings") { SettingScreen() }
                 composable("training_score") { TrainingScoreScreen(navController) }
+                composable ("score") { ScoreScreen(navController) }
             }
         }
     }
