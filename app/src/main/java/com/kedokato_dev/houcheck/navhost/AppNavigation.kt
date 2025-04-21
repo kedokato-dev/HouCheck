@@ -54,7 +54,7 @@ fun AppNavigation(navController: NavHostController) {
                 composable("home") { HomeScreen(navController) }
                 composable("login") { LoginScreen(navController) }
                 composable("studentInfo") { StudentInfoScreen(navController) }
-                composable("settings") { SettingScreen() }
+                composable("settings") { SettingScreen(navController) }
                 composable("training_score") { TrainingScoreScreen(navController) }
                 composable ("score") { ScoreScreen(navController) }
             }
