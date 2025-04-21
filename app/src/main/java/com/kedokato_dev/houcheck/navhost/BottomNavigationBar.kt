@@ -29,6 +29,13 @@ fun BottomNavigationBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+
+    bottomBarState.value = when (currentRoute) {
+        "training_score", "login", "studentInfo", "score" -> false
+        else -> true
+    }
+
+
     AnimatedVisibility(
         visible = bottomBarState.value,
         enter = slideInVertically(initialOffsetY = { it }),

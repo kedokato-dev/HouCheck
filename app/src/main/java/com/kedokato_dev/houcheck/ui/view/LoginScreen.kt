@@ -119,7 +119,6 @@ fun LoginScreen(navHostController: NavHostController) {
             }
             is LoginState.Success -> {
                navHostController.navigate("home")
-                Toast.makeText(context, "${authRepository.getSessionId()}", Toast.LENGTH_LONG).show()
 
             }
             is LoginState.Error -> {

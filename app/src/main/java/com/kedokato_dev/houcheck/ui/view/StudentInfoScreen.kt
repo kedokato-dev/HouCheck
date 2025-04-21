@@ -98,7 +98,6 @@ fun StudentInfoScreen(navHostController: NavHostController) {
 
     LaunchedEffect(Unit) {
         viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
-        Toast.makeText(context, "Session ID: ${authRepository.getSessionId().toString()}", Toast.LENGTH_SHORT).show()
     }
 
     // Màu sắc hiện đại

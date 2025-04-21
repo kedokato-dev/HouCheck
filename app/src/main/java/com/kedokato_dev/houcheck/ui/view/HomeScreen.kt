@@ -48,11 +48,16 @@ import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.data.api.ApiClient
 import com.kedokato_dev.houcheck.data.api.FetchInfoStudentService
+import com.kedokato_dev.houcheck.data.api.FetchScoreService
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
+import com.kedokato_dev.houcheck.data.repository.FetchScoreRepository
 import com.kedokato_dev.houcheck.data.repository.FetchStudentInfoRepository
 import com.kedokato_dev.houcheck.database.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchInfoStudentViewModelFactory
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchNameStudentViewModel
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchScoreState
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchScoreViewModel
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchScoreViewModelFactory
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchStudentNameState
 
 @Composable
@@ -64,16 +69,28 @@ fun HomeScreen(navController: NavHostController) {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
 
-    val api = remember { ApiClient.instance.create(FetchInfoStudentService::class.java) }
-    val dao = AppDatabase.buildDatabase(context).studentDAO()
-    val repository = remember { FetchStudentInfoRepository(api, dao) }
+    val fetchInfoStudentApi =
+        remember { ApiClient.instance.create(FetchInfoStudentService::class.java) }
+    val fetchScoreApi = remember { ApiClient.instance.create(FetchScoreService::class.java) }
+    val studentDao = AppDatabase.buildDatabase(context).studentDAO()
+    val scoreDao = AppDatabase.buildDatabase(context).scoreDAO()
+    val repository = remember { FetchStudentInfoRepository(fetchInfoStudentApi, studentDao) }
+
+    val fetchScoreRepo = remember { FetchScoreRepository(fetchScoreApi, scoreDao) }
 
     val viewModel: FetchInfoStudentViewModel = viewModel(
         factory = FetchInfoStudentViewModelFactory(repository)
     )
+
+    val fetchScoreViewModel: FetchScoreViewModel = viewModel(
+        factory = FetchScoreViewModelFactory(fetchScoreRepo)
+    )
+
+
     val authRepository = remember { AuthRepository(sharedPreferences) }
 
     val fetchState by viewModel.fetchState.collectAsState()
+    val fetchScoreState by fetchScoreViewModel.fetchState.collectAsState()
 
     // Màu sắc hiện đại
     val primaryColor = Color(0xFF03A9F4) // Tím đậm
@@ -83,11 +100,7 @@ fun HomeScreen(navController: NavHostController) {
 
     LaunchedEffect(Unit) {
         viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
-        Toast.makeText(
-            context,
-            "Session ID: ${authRepository.getSessionId().toString()}",
-            Toast.LENGTH_SHORT
-        ).show()
+        fetchScoreViewModel.fetchScore(authRepository.getSessionId().toString())
     }
 
     Column(
@@ -168,12 +181,48 @@ fun HomeScreen(navController: NavHostController) {
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "3.25 / 4 \uD83C\uDF96\uFE0F",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0277BD)
-                )
+                when (fetchScoreState) {
+
+                    is FetchScoreState.Success -> {
+                        val score = (fetchScoreState as FetchScoreState.Success).scores
+                        Text(
+                            text = "${score.gpa4}/ 4 \uD83C\uDF96\uFE0F",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0277BD)
+                        )
+                    }
+
+                    is FetchScoreState.Loading -> {
+                        Text(
+                            text = "Loading...",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    is FetchScoreState.Error -> {
+                        Text(
+                            text = (fetchState as FetchState.Error).message,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    else -> {
+                        Text(
+                            text = "No data",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+
+                }
+
             }
         }
 
@@ -190,6 +239,7 @@ fun HomeScreen(navController: NavHostController) {
             val features = listOf(
                 FeatureItem("Xem lịch học", R.drawable.schedule_date_svgrepo_com),
                 FeatureItem("Xem điểm học tập", R.drawable.a_plus_result_svgrepo_com),
+                FeatureItem("Thông tin cá nhân", R.drawable.no_avatar),
                 FeatureItem("Xem học phí", R.drawable.pig_piggy_bank_svgrepo_com),
                 FeatureItem("Xem lịch thi", R.drawable.schedule_date_svgrepo_com),
                 FeatureItem("Điểm rèn luyện", R.drawable.a_plus_result_svgrepo_com),
@@ -207,18 +257,20 @@ fun HomeScreen(navController: NavHostController) {
                 items(features.size) { index ->
                     FeatureGridItem(item = features[index]) {
                         when (index) {
-                            0 -> navController.navigate("studentInfo")
-                            1 -> navController.navigate("result")
-                            2 -> navController.navigate("tuition")
-                            3 -> navController.navigate("exam_schedule")
-                            4 -> navController.navigate("training_score")
-                            5 -> Toast.makeText(
+                            0 -> navController.navigate("home")
+                            1 -> navController.navigate("score")
+                            2 -> navController.navigate("studentInfo")
+                            3 -> navController.navigate("home")
+                            4 -> navController.navigate("home")
+                            5 -> navController.navigate("training_score")
+
+                            6 -> Toast.makeText(
                                 context,
                                 "Chức năng đang phát triển",
                                 Toast.LENGTH_SHORT
                             ).show()
 
-                            6 -> Toast.makeText(
+                            7 -> Toast.makeText(
                                 context,
                                 "Chức năng đang phát triển",
                                 Toast.LENGTH_SHORT
