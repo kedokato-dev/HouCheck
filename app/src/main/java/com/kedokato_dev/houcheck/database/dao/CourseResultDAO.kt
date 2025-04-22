@@ -15,9 +15,10 @@ interface CourseResultDAO {
     @Query("SELECT * FROM course_result")
     suspend fun getAllCourseResults(): List<CourseResultEntity>
 
-    @Query("SELECT * FROM course_result WHERE courseName = :courseName")
+    @Query("SELECT * FROM course_result WHERE courseName LIKE '%' || :courseName || '%'")
     suspend fun getCourseResultsByCourseName(courseName: String): List<CourseResultEntity>
 
     @Query("DELETE  FROM course_result")
     suspend fun deleteCourseResult()
+
 }

@@ -49,4 +49,48 @@ class FetchListScoreViewModel(
             )
         }
     }
+
+    fun searchListScore(query: String) {
+        validateInput(query, "Vui lòng nhập từ khóa tìm kiếm") {
+            setLoadingState()
+            viewModelScope.launch {
+                val result = repository.searchCourseResultsByCourseName(query)
+                _state.value = if (result.isNullOrEmpty()) {
+                    UiState.Error("Không tìm thấy kết quả nào")
+                } else {
+                    UiState.Success(result.map { entity ->
+                        CourseResult(
+                            semester = entity.semester,
+                            academicYear = entity.academicYear,
+                            courseCode = entity.courseCode,
+                            courseName = entity.courseName,
+                            credits = entity.credits,
+                            score10 = entity.score10,
+                            score4 = entity.score4,
+                            letterGrade = entity.letterGrade,
+                            notCounted = entity.notCounted,
+                            note = entity.note,
+                            detailLink = entity.detailLink
+                        )
+                    })
+                }
+            }
+        }
+    }
+
+    private inline fun validateInput(input: String, errorMessage: String, block: () -> Unit) {
+        if (input.isBlank()) {
+            setErrorState(errorMessage)
+        } else {
+            block()
+        }
+    }
+
+    private fun setErrorState(message: String) {
+        _state.value = UiState.Error(message)
+    }
+
+    private fun setLoadingState() {
+        _state.value = UiState.Loading
+    }
 }

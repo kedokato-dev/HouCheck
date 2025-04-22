@@ -71,13 +71,6 @@ class FetchListScoreRepository(
         }
     }
 
-    suspend fun deleteData() = withContext(Dispatchers.IO) {
-        try {
-            dao.deleteCourseResult()
-        } catch (e: Exception) {
-            Log.e("FetchListScoreRepository", "Error deleting data: ${e.message}")
-        }
-    }
 
 
     suspend fun refreshData(sessionId: String) = withContext(Dispatchers.IO) {
@@ -115,6 +108,14 @@ class FetchListScoreRepository(
         } catch (e: Exception) {
             Log.e("FetchListScoreRepository", "Error fetching or processing data: ${e.message}")
             return@withContext Result.failure(e)
+        }
+    }
+
+    suspend fun searchCourseResultsByCourseName(courseName: String): List<CourseResultEntity> = withContext(Dispatchers.IO) {
+        try {
+            dao.getCourseResultsByCourseName(courseName)
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

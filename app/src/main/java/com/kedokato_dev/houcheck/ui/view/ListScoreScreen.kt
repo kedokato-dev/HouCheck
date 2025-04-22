@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
@@ -41,6 +42,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -103,61 +106,130 @@ fun ListScoreScreen(
     )
     val fetchState = viewModel.state.collectAsState()
 
+    // Search state
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
     LaunchedEffect(Unit) {
         viewModel.fetchListScore(authRepository.getSessionId().toString())
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Kết quả học tập",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 24.sp
+            if (isSearchActive) {
+                // Search TopBar
+                TopAppBar(
+                    title = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .background(Color.White.copy(alpha = 0.1f), shape = RoundedCornerShape(16.dp))
+                        ) {
+                            TextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = { Text("Nhập tên môn học...") },
+
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(4.dp),
+                                singleLine = true,
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    focusedPlaceholderColor = Color.White.copy(alpha = 0.7f),
+                                    unfocusedPlaceholderColor = Color.White.copy(alpha = 0.7f)
+                                ),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            isSearchActive = false
+                            searchQuery = ""
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Đóng tìm kiếm",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            if (searchQuery.isNotBlank()) {
+                                viewModel.searchListScore(searchQuery)
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = "Thực hiện tìm kiếm",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = primaryColor,
+                        titleContentColor = Color.White
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navHostController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Quay lại",
-                            tint = Color.White
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        viewModel.refreshListScore(authRepository.getSessionId().toString())
-                        Toast.makeText(context, "Đang tải lại...", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Tải lại",
-                            tint = Color.White
-                        )
-                    }
-
-                    IconButton(onClick = {
-
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = "Tìm kiếm",
-                            tint = Color.White
-                        )
-                    }
-                },
-
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = primaryColor,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
                 )
-            )
-        },
+            } else {
+                // Regular TopBar
+                TopAppBar(
+                    title = {
+                        Text(
+                            "Kết quả học tập",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 24.sp
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navHostController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "Quay lại",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            viewModel.refreshListScore(authRepository.getSessionId().toString())
+                            Toast.makeText(context, "Đang tải lại...", Toast.LENGTH_SHORT).show()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = "Tải lại",
+                                tint = Color.White
+                            )
+                        }
 
+                        IconButton(onClick = {
+                            isSearchActive = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = "Tìm kiếm",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = primaryColor,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    )
+                )
+            }
+        },
         containerColor = Color.White
     ) { paddingValues ->
         when (val state = fetchState.value) {
@@ -198,6 +270,13 @@ fun ListScoreScreen(
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
+        }
+    }
+
+    // Perform search when user presses enter
+    LaunchedEffect(searchQuery) {
+        if (isSearchActive && searchQuery.isNotBlank()) {
+          viewModel.searchListScore(searchQuery)
         }
     }
 }
@@ -359,7 +438,6 @@ fun DetailItem(iconResId: Int, label: String, value: String) {
 }
 
 
-// Helper function to determine color based on letter grade
 @Composable
 fun getGradeColor(grade: String): Color {
     return when {
