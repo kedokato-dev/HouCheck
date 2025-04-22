@@ -22,6 +22,7 @@ class FetchTrainingScoreViewModel(
     val fetchState: StateFlow<FetchTrainingScoreState> get() = _fetchState
 
     fun fetchTrainingScore(sessionId: String) {
+
         if (sessionId.isBlank()) {
             _fetchState.value = FetchTrainingScoreState.Error("Session ID cannot be empty")
             return

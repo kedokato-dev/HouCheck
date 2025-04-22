@@ -38,8 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +80,7 @@ fun TrainingScoreScreen(navController: NavHostController) {
     val fetchState by viewModel.fetchState.collectAsState()
     val scrollState = rememberScrollState()
 
+    //tải dữ liệu lại mỗi khi vào xem lịch thi
     LaunchedEffect(Unit) {
         viewModel.fetchTrainingScore(authRepository.getSessionId().toString())
     }
@@ -182,6 +186,7 @@ private fun TrainingScoreCard(score: TrainingScore) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            // Học kỳ + năm học (in đậm nguyên dòng như cũ)
             Text(
                 text = "Học kỳ ${score.semester} - Năm học ${score.academicYear}",
                 fontSize = 16.sp,
@@ -189,19 +194,34 @@ private fun TrainingScoreCard(score: TrainingScore) {
                 color = Color(0xFF333333)
             )
             Spacer(modifier = Modifier.height(8.dp))
+
+            // Tổng điểm
             Text(
-                text = "Tổng điểm: ${score.totalScore}",
+                buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("Tổng điểm: ")
+                    }
+                    append(score.totalScore.toString())
+                },
                 fontSize = 14.sp,
                 color = Color(0xFF333333)
             )
+
+            // Xếp loại
             Text(
-                text = "Xếp loại: ${score.rank}",
+                buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("Xếp loại: ")
+                    }
+                    append(score.rank ?: "N/A")
+                },
                 fontSize = 14.sp,
                 color = Color(0xFF333333)
             )
         }
     }
 }
+
 
 @Composable
 private fun EmptyStateSection(onFetchClick: () -> Unit, primaryColor: Color) {
