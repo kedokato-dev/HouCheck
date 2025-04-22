@@ -12,8 +12,8 @@ interface ScoreDAO {
     @Insert
     suspend fun insertScore(score: ScoreEntity)
 
-    @Delete
-    suspend fun deleteScore(score: ScoreEntity)
+    @Query("DELETE FROM score")
+    suspend fun deleteScore()
 
     @Query("SELECT * FROM score")
     suspend fun getScore(): ScoreEntity?

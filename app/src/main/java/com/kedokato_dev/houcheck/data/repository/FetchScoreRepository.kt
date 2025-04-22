@@ -1,5 +1,6 @@
 package com.kedokato_dev.houcheck.data.repository
 
+import android.util.Log
 import com.kedokato_dev.houcheck.data.api.FetchScoreService
 import com.kedokato_dev.houcheck.data.model.Score
 import com.kedokato_dev.houcheck.data.model.ScoreResponse
@@ -58,6 +59,38 @@ class FetchScoreRepository(
                 return@withContext Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
             }
         } catch (e: Exception) {
+            return@withContext Result.failure(e)
+        }
+    }
+
+    suspend fun refreshData(sessionId: String) = withContext(Dispatchers.IO) {
+        try {
+            val response = api.fetchScore(sessionId)
+            if (response.isSuccessful) {
+                dao.deleteScore()
+                val scoreResponse = response.body()
+                scoreResponse?.let { score ->
+
+                    val entity = ScoreEntity(
+                        gpa4 = score.data.gpa4,
+                        academicRank4 = score.data.academicRank4,
+                        gpa4Current = score.data.gpa4Current,
+                        academicRank4Current = score.data.academicRank4Current,
+                        accumulatedCredits = score.data.accumulatedCredits,
+                        gpa10Current = score.data.gpa10Current,
+                        academicRank10Current = score.data.academicRank10Current,
+                        retakeSubjects = score.data.retakeSubjects,
+                        repeatSubjects = score.data.repeatSubjects,
+                        pendingSubjects = score.data.pendingSubjects
+                    )
+                    dao.insertScore(entity)
+                }
+                return@withContext Result.success(scoreResponse)
+            } else {
+                return@withContext Result.failure(Exception("No course results found"))
+            }
+        } catch (e: Exception) {
+            Log.e("FetchListScoreRepository", "Error fetching or processing data: ${e.message}")
             return@withContext Result.failure(e)
         }
     }
