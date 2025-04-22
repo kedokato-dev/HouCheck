@@ -1,6 +1,7 @@
 package com.kedokato_dev.houcheck.ui.view
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -59,7 +60,9 @@ fun SettingScreen(navHostController: NavHostController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(Color.White)
                 .padding(16.dp)
+
         ) {
             val settings = listOf(
                 SettingItem("Đăng xuất", icon = painterResource(id = R.drawable.logout)  ),

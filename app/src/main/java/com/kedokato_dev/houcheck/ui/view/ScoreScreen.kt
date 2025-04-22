@@ -1,6 +1,8 @@
 package com.kedokato_dev.houcheck.ui.view
 
 import android.content.Context
+import android.util.Log
+import android.widget.Button
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,10 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.kedokato_dev.houcheck.data.api.ApiClient
 import com.kedokato_dev.houcheck.data.api.FetchScoreService
 import com.kedokato_dev.houcheck.data.model.Score
@@ -48,6 +52,7 @@ fun ScoreScreen(navHostController: NavHostController) {
 
     LaunchedEffect(Unit) {
         viewModel.fetchScore(authRepository.getSessionId().toString())
+        Log.d("ScoreScreen", "Session ID: ${authRepository.getSessionId()}")
     }
 
 
@@ -79,32 +84,55 @@ fun ScoreScreen(navHostController: NavHostController) {
             )
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            when (fetchState) {
-                is FetchScoreState.Idle -> {
-                    Text("Vui lòng cung cấp Session ID để lấy điểm.")
+
+            Button(
+                onClick = {
+                    navHostController.navigate("list_score")
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    Icons.Default.List,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text("Xem danh sách điểm")
+            }
+
+            Column {
+                when (fetchState) {
+                    is FetchScoreState.Idle -> {
+                        Text("Vui lòng cung cấp Session ID để lấy điểm.")
+                    }
+
+                    is FetchScoreState.Loading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    }
+
+                    is FetchScoreState.Success -> {
+                        val score = (fetchState as FetchScoreState.Success).scores
+                        ScoreContent(score)
+                    }
+
+                    is FetchScoreState.Error -> {
+                        val errorMessage = (fetchState as FetchScoreState.Error).message
+                        Text("Lỗi: $errorMessage", color = MaterialTheme.colorScheme.error)
+                    }
                 }
 
-                is FetchScoreState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
+                Spacer(modifier = Modifier.height(16.dp))
 
-                is FetchScoreState.Success -> {
-                    val score = (fetchState as FetchScoreState.Success).scores
-                    ScoreContent(score)
-                }
 
-                is FetchScoreState.Error -> {
-                    val errorMessage = (fetchState as FetchScoreState.Error).message
-                    Text("Lỗi: $errorMessage", color = MaterialTheme.colorScheme.error)
-                }
             }
         }
+
+
     }
 }
 
@@ -116,10 +144,6 @@ fun ScoreContent(score: Score) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Kết quả học tập",
-            style = MaterialTheme.typography.headlineSmall
-        )
 
         ScoreCard(
             title = "GPA (Thang 4)",
@@ -179,4 +203,11 @@ fun ScoreCard(title: String, value: Any, icon: androidx.compose.ui.graphics.vect
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ScoreScreenPreview() {
+    val navController = NavHostController(LocalContext.current)
+    ScoreScreen(navHostController = navController)
 }
