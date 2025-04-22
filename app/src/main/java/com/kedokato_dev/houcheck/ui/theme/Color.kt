@@ -10,6 +10,12 @@ val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
-val primaryColor = Color(0xFF03A9F4) // Tím đậm
-val secondaryColor = Color(0xFF6DB4EC) // Tím nhạt hơn
+val primaryColor = Color(0xFF03A9F4)
+val secondaryColor = Color(0xFF6DB4EC)
 val gradientColors = listOf(primaryColor, secondaryColor)
+
+
+val HNOUBlue = Color(0xFF479AFF)        // Màu xanh đại học (màu chính - primary)
+val HNOULightBlue = Color(0xFF84B3F6)   // Màu xanh nhạt (màu phụ - secondary)
+val HNOUDarkBlue = Color(0xFF002171)    // Màu xanh đậm (màu nhấn - accent)
+val HNOUComplementary = Color(0xFFFF8F00) // Màu cam bổ sung (màu tương phản)

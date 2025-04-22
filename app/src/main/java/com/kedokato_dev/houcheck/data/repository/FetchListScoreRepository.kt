@@ -71,4 +71,52 @@ class FetchListScoreRepository(
         }
     }
 
+
+
+    suspend fun refreshData(sessionId: String) = withContext(Dispatchers.IO) {
+        try {
+            // Call API to fetch data
+            val response = api.fetchListScore(sessionId)
+
+            val courseResults = response.data
+            if (courseResults.scores.isNotEmpty()) {
+                // Only delete old data if API call is successful
+                dao.deleteCourseResult()
+
+                // Save fetched data to the database
+                courseResults.scores.forEach { courseResult ->
+                    dao.insertCourseResult(
+                        CourseResultEntity(
+                            semester = courseResult.semester,
+                            academicYear = courseResult.academicYear,
+                            courseCode = courseResult.courseCode,
+                            courseName = courseResult.courseName,
+                            credits = courseResult.credits,
+                            score10 = courseResult.score10,
+                            score4 = courseResult.score4,
+                            letterGrade = courseResult.letterGrade,
+                            notCounted = courseResult.notCounted,
+                            note = courseResult.note,
+                            detailLink = courseResult.detailLink
+                        )
+                    )
+                }
+                return@withContext Result.success(response)
+            } else {
+                return@withContext Result.failure(Exception("No course results found"))
+            }
+        } catch (e: Exception) {
+            Log.e("FetchListScoreRepository", "Error fetching or processing data: ${e.message}")
+            return@withContext Result.failure(e)
+        }
+    }
+
+    suspend fun searchCourseResultsByCourseName(courseName: String): List<CourseResultEntity> = withContext(Dispatchers.IO) {
+        try {
+            dao.getCourseResultsByCourseName(courseName)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
 }
