@@ -18,6 +18,6 @@ interface CourseResultDAO {
     @Query("SELECT * FROM course_result WHERE courseName = :courseName")
     suspend fun getCourseResultsByCourseName(courseName: String): List<CourseResultEntity>
 
-    @Delete
-    suspend fun deleteCourseResult(courseResult: CourseResultEntity)
+    @Query("DELETE  FROM course_result")
+    suspend fun deleteCourseResult()
 }

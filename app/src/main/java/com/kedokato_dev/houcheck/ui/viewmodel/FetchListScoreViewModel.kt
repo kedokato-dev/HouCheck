@@ -32,4 +32,21 @@ class FetchListScoreViewModel(
             )
         }
     }
+
+   fun refreshListScore(sessionId: String) {
+        if (sessionId.isBlank()) {
+            _state.value = UiState.Error("Session ID cannot be empty")
+            return
+        }
+
+        _state.value = UiState.Loading
+
+        viewModelScope.launch {
+            val result = repository.refreshData(sessionId)
+            _state.value = result.fold(
+                onSuccess = { response -> UiState.Success(response.data.scores) },
+                onFailure = { e -> UiState.Error(e.message ?: "Unknown error") }
+            )
+        }
+    }
 }
