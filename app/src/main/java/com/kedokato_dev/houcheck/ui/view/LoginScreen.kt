@@ -43,7 +43,6 @@ fun LoginScreen(navHostController: NavHostController) {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
 
-
     val authRepository = remember { AuthRepository(sharedPreferences) }
 
     // Tạo AuthViewModel với factory
@@ -66,7 +65,7 @@ fun LoginScreen(navHostController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Text("Login", style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
+        Text("Hou Track", style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
         Spacer(modifier = Modifier.height(16.dp))
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -74,7 +73,7 @@ fun LoginScreen(navHostController: NavHostController) {
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Username") },
+            label = { Text("Mã SV") },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next,
@@ -88,7 +87,7 @@ fun LoginScreen(navHostController: NavHostController) {
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Password") },
+            label = { Text("Mật khẩu") },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Done,
@@ -105,14 +104,14 @@ fun LoginScreen(navHostController: NavHostController) {
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Login")
+            Text(text = "Đăng nhập")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         when (loginState) {
             is LoginState.Idle -> {
-                // Do nothing for Idle state
+
             }
             is LoginState.Loading -> {
                 CircularProgressIndicator()

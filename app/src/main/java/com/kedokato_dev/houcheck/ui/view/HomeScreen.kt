@@ -186,7 +186,7 @@ fun HomeScreen(navController: NavHostController) {
                     is FetchScoreState.Success -> {
                         val score = (fetchScoreState as FetchScoreState.Success).scores
                         Text(
-                            text = "${score.gpa4}/ 4 \uD83C\uDF96\uFE0F",
+                            text = "GPA: ${score.gpa4} / 4\uD83D\uDD25",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF0277BD)
