@@ -1,5 +1,7 @@
 package com.kedokato_dev.houcheck.ui.theme
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 val Purple80 = Color(0xFFD0BCFF)
@@ -16,9 +18,14 @@ val secondaryColor = Color(0xFF42A5F5) // Xanh nhạt
 val backgroundColor = Color(0xFFF5F7FA) // Nền xám nhẹ
 val cardColor = Color.White
 val accentColor = Color(0xFF4CAF50) // Xanh lá
+// grandient
+
 
 
 val HNOUBlue = Color(0xFF479AFF)        // Màu xanh đại học (màu chính - primary)
 val HNOULightBlue = Color(0xFF3597D1)   // Màu xanh nhạt (màu phụ - secondary)
 val HNOUDarkBlue = Color(0xFF027DC5)    // Màu xanh đậm (màu nhấn - accent)
 val HNOUComplementary = Color(0xFFFF8F00) // Màu cam bổ sung (màu tương phản)
+
+
+val HNOUGradientColors = listOf(HNOUBlue, HNOULightBlue)
