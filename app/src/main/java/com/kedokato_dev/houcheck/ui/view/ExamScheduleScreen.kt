@@ -8,7 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,27 +18,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.kedokato_dev.houcheck.data.api.ApiClient
+import com.kedokato_dev.houcheck.data.api.FetchExamScheduleService
 import com.kedokato_dev.houcheck.data.model.ExamSchedule
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchExamScheduleRepository
+import com.kedokato_dev.houcheck.database.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.viewmodel.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExamScheduleScreen(navController: NavHostController) {
     val context = LocalContext.current
-    val repository = remember { FetchExamScheduleRepository() }
+    // Get the database and DAO
+    val examScheduleDAO = AppDatabase.buildDatabase(context).examScheduleDAO()
+    val api = ApiClient.instance.create(FetchExamScheduleService::class.java)
+    val repository = remember { FetchExamScheduleRepository(api, examScheduleDAO) }
     val sharedPreferences = remember {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
@@ -47,18 +54,13 @@ fun ExamScheduleScreen(navController: NavHostController) {
     )
     val fetchState by viewModel.fetchState.collectAsState()
     val scrollState = rememberScrollState()
-    val coroutineScope = rememberCoroutineScope()
 
-    // State để theo dõi kỳ được chọn từ dropdown
-    var selectedSemester by remember { mutableStateOf<String?>(null) }
-    var expanded by remember { mutableStateOf(false) }
-
+    // Load data when the screen is first displayed
     LaunchedEffect(Unit) {
         viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
     }
 
     val primaryColor = Color(0xFF03A9F4)
-    val secondaryColor = Color(0xFF0277BD)
 
     Scaffold(
         topBar = {
@@ -80,6 +82,20 @@ fun ExamScheduleScreen(navController: NavHostController) {
                         )
                     }
                 },
+                actions = {
+                    // Add refresh button here
+                    IconButton(
+                        onClick = {
+                            viewModel.refreshExamSchedules(authRepository.getSessionId().toString())
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Làm mới",
+                            tint = Color.White
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = primaryColor,
                     titleContentColor = Color.White,
@@ -89,6 +105,7 @@ fun ExamScheduleScreen(navController: NavHostController) {
         },
         containerColor = Color(0xFFF8F7FC)
     ) { paddingValues ->
+        // Rest of your UI remains the same...
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -105,9 +122,7 @@ fun ExamScheduleScreen(navController: NavHostController) {
                     is FetchExamScheduleState.Idle -> {
                         EmptyStateSection(
                             onFetchClick = {
-                                coroutineScope.launch {
-                                    viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
-                                }
+                                viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
                             },
                             primaryColor = primaryColor
                         )
@@ -117,105 +132,51 @@ fun ExamScheduleScreen(navController: NavHostController) {
                     }
                     is FetchExamScheduleState.Success -> {
                         val schedules = (fetchState as FetchExamScheduleState.Success).schedules
-                        if (schedules.isEmpty()) {
+
+                        // Chỉ hiển thị lịch thi có ngày lớn hơn ngày hiện tại
+                        val currentDate = Calendar.getInstance().time
+                        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+                        val filteredSchedules = schedules.filter { schedule ->
+                            try {
+                                val examDate = schedule.date?.let { dateFormat.parse(it) }
+                                examDate != null && examDate.after(currentDate)
+                            } catch (e: Exception) {
+                                true // Giữ lại nếu không thể phân tích ngày
+                            }
+                        }
+
+                        if (filteredSchedules.isEmpty()) {
                             Text(
-                                text = "Không có lịch thi nào để hiển thị",
+                                text = "Không có lịch thi sắp tới để hiển thị",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.Gray,
                                 modifier = Modifier.padding(16.dp)
                             )
                         } else {
-                            // Nhóm lịch thi theo kỳ học
-                            val groupedSchedules = schedules.groupBy { it.semester ?: "Không xác định" }
+                            // Nhóm lịch thi theo ngày
+                            val groupedSchedules = filteredSchedules.groupBy { it.date }
 
-                            // Lấy danh sách các kỳ học cho dropdown
-                            val semesters = groupedSchedules.keys.toList()
-
-                            // Nếu chưa chọn kỳ nào, mặc định chọn kỳ đầu tiên
-                            if (selectedSemester == null && semesters.isNotEmpty()) {
-                                selectedSemester = semesters.first()
-                            }
-
-                            // Dropdown để chọn kỳ học
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                            // Hiển thị theo từng ngày
+                            groupedSchedules.forEach { (date, schedulesForDate) ->
+                                // Hiển thị ngày thi
                                 Text(
-                                    text = "Chọn kỳ học:",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF333333),
-                                    modifier = Modifier.padding(end = 8.dp)
+                                    text = "Ngày thi: $date",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF0277BD),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp)
                                 )
-                                Box {
-                                    OutlinedButton(
-                                        onClick = { expanded = true },
-                                        shape = RoundedCornerShape(8.dp),
-                                        modifier = Modifier
-                                            .width(200.dp)
-                                            .height(40.dp)
-                                    ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text(
-                                                text = selectedSemester ?: "Chọn kỳ học",
-                                                fontSize = 14.sp,
-                                                color = if (selectedSemester == null) Color.Gray else Color.Black
-                                            )
-                                            Spacer(modifier = Modifier.weight(1f))
-                                            Icon(
-                                                imageVector = Icons.Default.ArrowDropDown,
-                                                contentDescription = "Dropdown",
-                                                tint = Color.Gray
-                                            )
-                                        }
-                                    }
-                                    DropdownMenu(
-                                        expanded = expanded,
-                                        onDismissRequest = { expanded = false },
-                                        modifier = Modifier
-                                            .width(200.dp)
-                                            .background(Color.White)
-                                    ) {
-                                        semesters.forEach { semester ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    Text(
-                                                        text = semester,
-                                                        fontSize = 14.sp
-                                                    )
-                                                },
-                                                onClick = {
-                                                    selectedSemester = semester
-                                                    expanded = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
 
-                            // Hiển thị lịch thi của kỳ được chọn
-                            selectedSemester?.let { semester ->
-                                val semesterSchedules = groupedSchedules[semester] ?: emptyList()
-                                if (semesterSchedules.isEmpty()) {
-                                    Text(
-                                        text = "Không có lịch thi cho kỳ $semester",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = Color.Gray,
-                                        modifier = Modifier.padding(16.dp)
-                                    )
-                                } else {
-                                    semesterSchedules.forEach { schedule ->
-                                        ExamScheduleCard(schedule = schedule)
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                    }
+                                // Hiển thị danh sách các môn thi trong ngày đó
+                                schedulesForDate.forEach { schedule ->
+                                    ExamScheduleCard(schedule = schedule)
+                                    Spacer(modifier = Modifier.height(12.dp))
                                 }
+
+                                Spacer(modifier = Modifier.height(16.dp))
                             }
                         }
                     }
@@ -223,9 +184,7 @@ fun ExamScheduleScreen(navController: NavHostController) {
                         ErrorStateSection(
                             message = (fetchState as FetchExamScheduleState.Error).message,
                             onRetryClick = {
-                                coroutineScope.launch {
-                                    viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
-                                }
+                                viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
                             },
                             primaryColor = primaryColor
                         )
@@ -249,131 +208,100 @@ private fun ExamScheduleCard(schedule: ExamSchedule) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
         ) {
-            // Tên môn thi (đậm)
-            Text(
-                text = schedule.subject ?: "N/A",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333333)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Ngày thi
-            Text(
-                buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Ngày thi: ")
-                    }
-                    append(schedule.date ?: "N/A")
-                },
-                fontSize = 14.sp,
-                color = Color(0xFF333333)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Buổi thi và Giờ thi
-            Row {
-                Text(
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Buổi: ")
-                        }
-                        append(schedule.session ?: "N/A")
-                    },
-                    fontSize = 14.sp,
-                    color = Color(0xFF333333)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "—", fontSize = 14.sp, color = Color(0xFF333333))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Giờ: ")
-                        }
-                        append(schedule.time ?: "N/A")
-                    },
-                    fontSize = 14.sp,
-                    color = Color(0xFF333333)
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Phòng và SBD
-            Row {
-                Text(
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Phòng: ")
-                        }
-                        append(schedule.room ?: "N/A")
-                    },
-                    fontSize = 14.sp,
-                    color = Color(0xFF333333)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "—", fontSize = 14.sp, color = Color(0xFF333333))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("SBD: ")
-                        }
-                        append(schedule.studentNumber ?: "N/A")
-                    },
-                    fontSize = 14.sp,
-                    color = Color(0xFF333333)
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Đợt thi
-            Text(
-                buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Đợt thi: ")
-                    }
-                    append(schedule.testPhase ?: "N/A")
-                },
-                fontSize = 14.sp,
-                color = Color(0xFF333333)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Hình thức thi (nhãn đậm + nội dung thường)
-            Text(
-                buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Hình thức: ")
-                    }
-                    append(schedule.examType ?: "N/A")
-                },
-                fontSize = 14.sp,
-                color = Color(0xFF333333)
-            )
-
-            // Ghi chú (nếu có)
-            schedule.note?.let { note ->
-                if (note.isNotEmpty()) {
+            // Layout cha chứa thông tin buổi thi và môn thi
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Phần bên trái: Buổi thi và giờ bắt đầu
+                Column(
+                    modifier = Modifier
+                        .weight(0.3f)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = schedule.session ?: "N/A",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0277BD)
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        buildAnnotatedString {
-                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                append("Ghi chú: ")
-                            }
-                            append(note)
-                        },
-                        fontSize = 14.sp,
+                        text = schedule.time ?: "N/A",
+                        fontSize = 20.sp,
                         color = Color(0xFF333333)
                     )
+                }
+
+                // Đường ngăn cách giữa phần thông tin và buổi thi
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(Color(0xFF03A9F4)) // Màu xanh lam
+                )
+
+                // Phần bên phải: Thông tin môn thi
+                Column(
+                    modifier = Modifier
+                        .weight(0.7f)
+                        .padding(16.dp)
+                ) {
+                    // Tên môn thi (bỏ icon)
+                    Text(
+                        text = schedule.subject ?: "N/A",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF333333),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    // Phòng thi với icon
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Phòng thi",
+                            tint = Color(0xFF0277BD),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = schedule.room ?: "N/A",
+                            fontSize = 14.sp,
+                            color = Color(0xFF333333)
+                        )
+                    }
+
+                    // Số báo danh với icon
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Số báo danh",
+                            tint = Color(0xFF0277BD),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "SBD: ${schedule.studentNumber ?: "N/A"}",
+                            fontSize = 14.sp,
+                            color = Color(0xFF333333)
+                        )
+                    }
                 }
             }
         }
     }
 }
-
 
 @Composable
 private fun EmptyStateSection(onFetchClick: () -> Unit, primaryColor: Color) {

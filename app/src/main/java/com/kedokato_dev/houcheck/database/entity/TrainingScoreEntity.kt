@@ -9,6 +9,6 @@ data class TrainingScoreEntity(
     val id: Int = 0,
     val semester: String,
     val academicYear: String,
-    val totalScore: String,
+    val totalScore: Int,
     val rank: String
 )

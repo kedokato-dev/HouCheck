@@ -10,6 +10,6 @@ data class TrainingScoreResponse(
 data class TrainingScore(
     @SerializedName("semester") val semester: String,
     @SerializedName("academicYear") val academicYear: String,
-    @SerializedName("totalScore") val totalScore: String,
+    @SerializedName("totalScore") val totalScore: Int,
     @SerializedName("rank") val rank: String
 )

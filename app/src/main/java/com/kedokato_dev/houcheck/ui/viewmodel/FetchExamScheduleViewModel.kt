@@ -2,11 +2,13 @@ package com.kedokato_dev.houcheck.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.kedokato_dev.houcheck.data.model.ExamSchedule
 import com.kedokato_dev.houcheck.data.repository.FetchExamScheduleRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 sealed class FetchExamScheduleState {
     object Idle : FetchExamScheduleState()
@@ -21,13 +23,27 @@ class FetchExamScheduleViewModel(
     private val _fetchState = MutableStateFlow<FetchExamScheduleState>(FetchExamScheduleState.Idle)
     val fetchState: StateFlow<FetchExamScheduleState> = _fetchState.asStateFlow()
 
-    suspend fun fetchExamSchedules(sessionId: String) {
-        _fetchState.value = FetchExamScheduleState.Loading
-        try {
-            val schedules = repository.fetchExamSchedule(sessionId)
-            _fetchState.value = FetchExamScheduleState.Success(schedules)
-        } catch (e: Exception) {
-            _fetchState.value = FetchExamScheduleState.Error(e.message ?: "Unknown error")
+    fun fetchExamSchedules(sessionId: String) {
+        viewModelScope.launch {
+            _fetchState.value = FetchExamScheduleState.Loading
+            try {
+                val schedules = repository.fetchExamSchedule(sessionId)
+                _fetchState.value = FetchExamScheduleState.Success(schedules)
+            } catch (e: Exception) {
+                _fetchState.value = FetchExamScheduleState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun refreshExamSchedules(sessionId: String) {
+        viewModelScope.launch {
+            _fetchState.value = FetchExamScheduleState.Loading
+            try {
+                val schedules = repository.refreshExamSchedule(sessionId)
+                _fetchState.value = FetchExamScheduleState.Success(schedules)
+            } catch (e: Exception) {
+                _fetchState.value = FetchExamScheduleState.Error(e.message ?: "Unknown error")
+            }
         }
     }
 }

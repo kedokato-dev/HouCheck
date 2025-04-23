@@ -22,7 +22,6 @@ class FetchTrainingScoreViewModel(
     val fetchState: StateFlow<FetchTrainingScoreState> get() = _fetchState
 
     fun fetchTrainingScore(sessionId: String) {
-
         if (sessionId.isBlank()) {
             _fetchState.value = FetchTrainingScoreState.Error("Session ID cannot be empty")
             return
@@ -32,6 +31,27 @@ class FetchTrainingScoreViewModel(
 
         viewModelScope.launch {
             val result = repository.fetchTrainingScore(sessionId)
+            _fetchState.value = result.fold(
+                onSuccess = { response ->
+                    FetchTrainingScoreState.Success(response.data)
+                },
+                onFailure = { error ->
+                    FetchTrainingScoreState.Error(error.message ?: "Unknown error")
+                }
+            )
+        }
+    }
+
+    fun refreshTrainingScore(sessionId: String) {
+        if (sessionId.isBlank()) {
+            _fetchState.value = FetchTrainingScoreState.Error("Session ID cannot be empty")
+            return
+        }
+
+        _fetchState.value = FetchTrainingScoreState.Loading
+
+        viewModelScope.launch {
+            val result = repository.refreshTrainingScore(sessionId)
             _fetchState.value = result.fold(
                 onSuccess = { response ->
                     FetchTrainingScoreState.Success(response.data)

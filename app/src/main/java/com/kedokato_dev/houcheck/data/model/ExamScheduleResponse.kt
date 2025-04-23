@@ -12,15 +12,15 @@ data class ExamScheduleData(
 )
 
 data class ExamSchedule(
-    @SerializedName("semester") val semester: String?,
-    @SerializedName("subject") val subject: String?,
-    @SerializedName("testTime") val testTime: String?,
-    @SerializedName("testPhase") val testPhase: String?,
-    @SerializedName("date") val date: String?,
-    @SerializedName("session") val session: String?,
-    @SerializedName("time") val time: String?,
-    @SerializedName("room") val room: String?,
-    @SerializedName("studentNumber") val studentNumber: String?,
-    @SerializedName("examType") val examType: String?,
+    @SerializedName("semester") val semester: String,
+    @SerializedName("subject") val subject: String,
+    @SerializedName("testTime") val testTime: String,
+    @SerializedName("testPhase") val testPhase: String,
+    @SerializedName("date") val date: String,
+    @SerializedName("session") val session: String,
+    @SerializedName("time") val time: String,
+    @SerializedName("room") val room: String,
+    @SerializedName("studentNumber") val studentNumber: String,
+    @SerializedName("examType") val examType: String,
     @SerializedName("note") val note: String?
 )

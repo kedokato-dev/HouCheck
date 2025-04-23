@@ -1,20 +1,26 @@
 package com.kedokato_dev.houcheck.ui.view
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
@@ -32,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,6 +86,7 @@ fun TrainingScoreScreen(navController: NavHostController) {
     )
     val fetchState by viewModel.fetchState.collectAsState()
     val scrollState = rememberScrollState()
+    val refreshingState = remember { mutableStateOf(false) }
 
     //tải dữ liệu lại mỗi khi vào xem lịch thi
     LaunchedEffect(Unit) {
@@ -105,6 +113,21 @@ fun TrainingScoreScreen(navController: NavHostController) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Quay lại",
+                            tint = Color.White
+                        )
+                    }
+                },
+                actions = {
+                    // Add refresh button here
+                    IconButton(
+                        onClick = {
+                            refreshingState.value = true
+                            viewModel.refreshTrainingScore(authRepository.getSessionId().toString())
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Làm mới",
                             tint = Color.White
                         )
                     }
@@ -181,43 +204,62 @@ private fun TrainingScoreCard(score: TrainingScore) {
         color = Color.White,
         shadowElevation = 4.dp
     ) {
-        Column(
+        // Layout cha chứa toàn bộ card
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Học kỳ + năm học (in đậm nguyên dòng như cũ)
-            Text(
-                text = "Học kỳ ${score.semester} - Năm học ${score.academicYear}",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333333)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // Phần bên trái: Tên học kỳ và xếp loại
+            Column(
+                modifier = Modifier
+                    .weight(0.7f)
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Học kỳ ${score.semester} - Năm học ${score.academicYear}",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Xếp loại: ${score.rank ?: "N/A"}",
+                    fontSize = 16.sp,
+                    color = Color(0xFF333333)
+                )
+            }
 
-            // Tổng điểm
-            Text(
-                buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Tổng điểm: ")
-                    }
-                    append(score.totalScore.toString())
-                },
-                fontSize = 14.sp,
-                color = Color(0xFF333333)
+            // Đường ngăn cách giữa phần thông tin và điểm
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .fillMaxHeight()
+                    .background(Color(0xFF03A9F4)) // Màu xanh lam
             )
 
-            // Xếp loại
-            Text(
-                buildAnnotatedString {
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Xếp loại: ")
-                    }
-                    append(score.rank ?: "N/A")
-                },
-                fontSize = 14.sp,
-                color = Color(0xFF333333)
-            )
+            // Phần bên phải: Điểm với background tùy theo điểm số
+            Box(
+                modifier = Modifier
+                    .weight(0.3f)
+                    .fillMaxHeight()
+                    .background(
+                        when {
+                            score.totalScore >= 70 -> Color(0xFF4CAF50) // Xanh lá
+                            score.totalScore >= 50 -> Color(0xFFFFC107) // Vàng
+                            else -> Color(0xFFF44336) // Đỏ
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = score.totalScore.toString(),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
     }
 }
