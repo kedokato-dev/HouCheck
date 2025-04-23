@@ -44,7 +44,7 @@ class FetchListScoreViewModel(
         viewModelScope.launch {
             val result = repository.refreshData(sessionId)
             _state.value = result.fold(
-                onSuccess = { response -> UiState.Success(response.data.scores) },
+                onSuccess = { response -> UiState.Success(response) },
                 onFailure = { e -> UiState.Error(e.message ?: "Unknown error") }
             )
         }

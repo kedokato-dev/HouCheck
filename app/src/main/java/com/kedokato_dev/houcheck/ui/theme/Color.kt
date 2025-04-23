@@ -16,6 +16,6 @@ val gradientColors = listOf(primaryColor, secondaryColor)
 
 
 val HNOUBlue = Color(0xFF479AFF)        // Màu xanh đại học (màu chính - primary)
-val HNOULightBlue = Color(0xFF84B3F6)   // Màu xanh nhạt (màu phụ - secondary)
-val HNOUDarkBlue = Color(0xFF002171)    // Màu xanh đậm (màu nhấn - accent)
+val HNOULightBlue = Color(0xFF3597D1)   // Màu xanh nhạt (màu phụ - secondary)
+val HNOUDarkBlue = Color(0xFF027DC5)    // Màu xanh đậm (màu nhấn - accent)
 val HNOUComplementary = Color(0xFFFF8F00) // Màu cam bổ sung (màu tương phản)

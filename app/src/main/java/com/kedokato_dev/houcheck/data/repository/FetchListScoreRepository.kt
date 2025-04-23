@@ -75,7 +75,7 @@ class FetchListScoreRepository(
 
     suspend fun refreshData(sessionId: String) = withContext(Dispatchers.IO) {
         try {
-            // Call API to fetch data
+
             val response = api.fetchListScore(sessionId)
 
             val courseResults = response.data
@@ -101,7 +101,7 @@ class FetchListScoreRepository(
                         )
                     )
                 }
-                return@withContext Result.success(response)
+                return@withContext Result.success(response.data.scores)
             } else {
                 return@withContext Result.failure(Exception("No course results found"))
             }
