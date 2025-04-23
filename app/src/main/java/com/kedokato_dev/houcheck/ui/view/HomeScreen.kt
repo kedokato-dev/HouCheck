@@ -55,6 +55,8 @@ fun HomeScreen(navController: NavHostController) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
+    val database: AppDatabase = AppDatabase.buildDatabase(context)
+
     val sharedPreferences = remember {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
@@ -62,8 +64,8 @@ fun HomeScreen(navController: NavHostController) {
     val fetchInfoStudentApi =
         remember { ApiClient.instance.create(FetchInfoStudentService::class.java) }
     val fetchScoreApi = remember { ApiClient.instance.create(FetchScoreService::class.java) }
-    val studentDao = AppDatabase.buildDatabase(context).studentDAO()
-    val scoreDao = AppDatabase.buildDatabase(context).scoreDAO()
+    val studentDao = database.studentDAO()
+    val scoreDao = database.scoreDAO()
     val repository = remember { FetchStudentInfoRepository(fetchInfoStudentApi, studentDao) }
     val fetchScoreRepo = remember { FetchScoreRepository(fetchScoreApi, scoreDao) }
     val authRepository = remember { AuthRepository(sharedPreferences) }

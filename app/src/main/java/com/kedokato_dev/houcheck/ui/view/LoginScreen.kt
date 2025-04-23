@@ -270,6 +270,9 @@ fun LoginScreen(navHostController: NavHostController) {
         LaunchedEffect(loginState) {
             when (loginState) {
                 is LoginState.Success -> {
+                    sharedPreferences.edit()
+                        .putString("student_id", username)
+                        .apply()
                     navHostController.navigate("home")
                 }
 

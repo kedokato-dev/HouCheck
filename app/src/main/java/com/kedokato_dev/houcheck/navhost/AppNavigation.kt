@@ -6,18 +6,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.kedokato_dev.houcheck.ui.LoginScreen
+import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.view.HomeScreen
 import com.kedokato_dev.houcheck.ui.view.ListScoreScreen
 import com.kedokato_dev.houcheck.ui.view.ScoreScreen
@@ -28,7 +34,7 @@ import com.kedokato_dev.houcheck.ui.view.TrainingScoreScreen
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val bottomBarState = rememberSaveable { mutableStateOf(false) }
-    val primaryColor = Color(0xFF03A9F4)
+
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -46,7 +52,7 @@ fun AppNavigation(navController: NavHostController) {
                     BottomNavItem("Hồ sơ", "studentInfo", Icons.Filled.Person, Icons.Outlined.Person),
                     BottomNavItem("Cài đặt", "settings", Icons.Filled.Settings, Icons.Outlined.Settings)
                 ),
-                primaryColor = primaryColor
+                primaryColor = HNOUDarkBlue
             )
         }
     ) { innerPadding ->

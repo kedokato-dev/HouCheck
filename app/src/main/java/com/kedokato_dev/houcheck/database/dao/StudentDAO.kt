@@ -13,4 +13,7 @@ interface StudentDAO {
 
     @Insert
     suspend fun insertStudent(student: StudentEntity)
+
+    @Query("DELETE FROM profile")
+    suspend fun deleteAllStudents()
 }
