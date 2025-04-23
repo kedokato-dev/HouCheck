@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.kedokato_dev.houcheck.database.entity.StudentEntity
+import kotlin.coroutines.Continuation
+
 
 @Dao
 interface StudentDAO {
@@ -13,4 +15,7 @@ interface StudentDAO {
 
     @Insert
     suspend fun insertStudent(student: StudentEntity)
+
+    @Query("DELETE FROM profile")
+    suspend fun deleteAllStudents()
 }
