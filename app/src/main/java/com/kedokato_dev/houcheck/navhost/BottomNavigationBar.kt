@@ -3,12 +3,10 @@ package com.kedokato_dev.houcheck.navhost
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -19,6 +17,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,28 +37,16 @@ fun BottomNavigationBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Base height for the navigation bar content
-    val baseNavigationHeight = 64.dp
-
     // Determine if the navigation bar should be visible
     bottomBarState.value = when (currentRoute) {
         "training_score", "login", "studentInfo", "score", "list_score" -> false
         else -> true
     }
 
-    // Get the system navigation bar insets
-    val navigationBarsInsets = WindowInsets.navigationBars.asPaddingValues()
-    val hasVisibleNavigationBar = navigationBarsInsets.calculateBottomPadding() > 0.dp
+    // Define a fixed height for the navigation bar content
+    val navigationContentHeight = 56.dp
 
-    // Adjust height based on navigation mode
-    // For gesture navigation (smaller or no visible navigation bar) we use the baseHeight
-    // For 3-button navigation (larger visible navigation bar) we add some extra space
-    val adjustedHeight = if (hasVisibleNavigationBar) {
-        baseNavigationHeight + 50.dp // Add some extra space for 3-button navigation
-    } else {
-        baseNavigationHeight // Use base height for gesture navigation
-    }
-
+    // AnimatedVisibility handles the show/hide animation
     AnimatedVisibility(
         visible = bottomBarState.value,
         enter = slideInVertically(initialOffsetY = { it }),
@@ -68,10 +55,12 @@ fun BottomNavigationBar(
         NavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(adjustedHeight)
-                .navigationBarsPadding(),
+                // Add navigation bars padding to adapt to system navigation modes
+                .navigationBarsPadding()
+                // Explicitly set height for the navigation bar content
+                .height(navigationContentHeight),
             containerColor = HNOUDarkBlue.copy(alpha = 0.95f),
-            tonalElevation = 16.dp,
+            tonalElevation = 16.dp
         ) {
             items.forEach { item ->
                 val selected = currentRoute == item.route
@@ -87,15 +76,20 @@ fun BottomNavigationBar(
                     icon = {
                         Icon(
                             imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                            contentDescription = item.name
+                            contentDescription = item.name,
+                            // Slightly smaller padding for better fit
+                            modifier = Modifier.padding(bottom = 2.dp)
                         )
                     },
                     label = {
                         Text(
                             text = item.name,
+                            // Slightly smaller font size for better readability in limited space
                             style = TextStyle(
-                                color = if (selected) Color.White else Color.White.copy(alpha = 0.6f),
-                                fontSize = 14.sp, fontWeight = FontWeight.Bold),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
+                            ),
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                         )
                     },
