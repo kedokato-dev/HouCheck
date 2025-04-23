@@ -88,7 +88,9 @@ fun TrainingScoreScreen(navController: NavHostController) {
     val fetchState by viewModel.fetchState.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.fetchTrainingScore(authRepository.getSessionId().toString())
+        viewModel.fetchTrainingScore(
+            authRepository.getSessionId().toString()
+        )
     }
 
 
@@ -133,7 +135,7 @@ fun TrainingScoreScreen(navController: NavHostController) {
                 actions = {
                     // Nút làm mới điểm
                     IconButton(onClick = {
-                        viewModel.fetchTrainingScore(authRepository.getSessionId().toString())
+                        viewModel.refreshData(authRepository.getSessionId().toString())
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
@@ -223,7 +225,7 @@ fun TrainingScoreScreen(navController: NavHostController) {
                     ErrorStateSection(
                         message = (fetchState as FetchTrainingScoreState.Error).message,
                         onRetryClick = {
-                            viewModel.fetchTrainingScore(
+                            viewModel.refreshData(
                                 authRepository.getSessionId().toString()
                             )
                         },

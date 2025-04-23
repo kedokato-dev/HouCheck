@@ -41,4 +41,25 @@ class FetchTrainingScoreViewModel(
             )
         }
     }
+
+    fun refreshData(sessionId: String){
+        if (sessionId.isBlank()) {
+            _fetchState.value = FetchTrainingScoreState.Error("Session ID cannot be empty")
+            return
+        }
+
+        _fetchState.value = FetchTrainingScoreState.Loading
+
+        viewModelScope.launch {
+            val result = repository.refreshData(sessionId)
+            _fetchState.value = result!!.fold(
+                onSuccess = { response ->
+                    FetchTrainingScoreState.Success(response.data)
+                },
+                onFailure = { error ->
+                    FetchTrainingScoreState.Error(error.message ?: "Unknown error")
+                }
+            )
+        }
+    }
 }
