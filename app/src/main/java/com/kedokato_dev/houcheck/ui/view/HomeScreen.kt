@@ -45,6 +45,9 @@ import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchScoreRepository
 import com.kedokato_dev.houcheck.data.repository.FetchStudentInfoRepository
 import com.kedokato_dev.houcheck.database.dao.AppDatabase
+import com.kedokato_dev.houcheck.ui.theme.backgroundColor
+import com.kedokato_dev.houcheck.ui.theme.primaryColor
+import com.kedokato_dev.houcheck.ui.theme.secondaryColor
 import com.kedokato_dev.houcheck.ui.viewmodel.*
 
 @Composable
@@ -76,12 +79,7 @@ fun HomeScreen(navController: NavHostController) {
     val fetchState by viewModel.fetchState.collectAsState()
     val fetchScoreState by fetchScoreViewModel.fetchState.collectAsState()
 
-    // Màu sắc ứng dụng
-    val primaryColor = Color(0xFF1565C0) // Xanh đậm
-    val secondaryColor = Color(0xFF42A5F5) // Xanh nhạt
-    val backgroundColor = Color(0xFFF5F7FA) // Nền xám nhẹ
-    val cardColor = Color.White
-    val accentColor = Color(0xFF4CAF50) // Xanh lá
+
 
     LaunchedEffect(Unit) {
         viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
@@ -153,7 +151,7 @@ fun ProfileHeaderSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "HouCheck",
+                text = "My HOU",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White

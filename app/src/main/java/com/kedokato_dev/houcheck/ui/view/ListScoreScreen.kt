@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -28,10 +27,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.rounded.Call
-import androidx.compose.material.icons.rounded.DateRange
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,11 +50,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -77,9 +69,7 @@ import com.kedokato_dev.houcheck.data.repository.FetchListScoreRepository
 import com.kedokato_dev.houcheck.database.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
-import com.kedokato_dev.houcheck.ui.theme.gradientColors
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
-import com.kedokato_dev.houcheck.ui.theme.secondaryColor
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchListScoreViewModel
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchListScoreViewModelFactory
 
@@ -446,7 +436,7 @@ fun getGradeColor(grade: String): Color {
         grade == "B+" || grade == "B" -> Color(0xFF1976D2) // Blue
         grade == "C+" || grade == "C" -> Color(0xFFFFA000) // Amber
         grade == "D+" || grade == "D" -> Color(0xFFE64A19) // Deep Orange
-        grade == "P" -> Color(0xFF388E3C) // Deep Orange
+        grade == "P" -> Color(0xFFCDDC39) // Deep Orange
         grade == "F" -> Color(0xFFD32F2F) // Red
         else -> MaterialTheme.colorScheme.tertiary
     }

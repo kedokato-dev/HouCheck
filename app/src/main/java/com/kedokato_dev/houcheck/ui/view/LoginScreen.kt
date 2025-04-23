@@ -209,7 +209,6 @@ fun LoginScreen(navHostController: NavHostController) {
                     // Login Button
                     Button(
                         onClick = {
-                            authViewModel.login(username, password)
                             // Save credentials if remember login is checked
                             if (rememberLogin) {
                                 sharedPreferences.edit()
@@ -222,6 +221,9 @@ fun LoginScreen(navHostController: NavHostController) {
                                     .remove("saved_username")
                                     .apply()
                             }
+
+                            authViewModel.login(username, password)
+
                         },
                         modifier = Modifier
                             .fillMaxWidth()
