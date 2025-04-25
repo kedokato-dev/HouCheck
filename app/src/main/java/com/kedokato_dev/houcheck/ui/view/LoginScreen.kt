@@ -58,7 +58,9 @@ fun LoginScreen(navHostController: NavHostController) {
         val shouldRemember = sharedPreferences.getBoolean("remember_login", false)
         if (shouldRemember) {
             val savedUsername = sharedPreferences.getString("saved_username", "") ?: ""
+            val savedPassword = sharedPreferences.getString("password", "") ?: ""
             username = savedUsername
+            password = savedPassword
             rememberLogin = true
         }
     }
@@ -214,11 +216,13 @@ fun LoginScreen(navHostController: NavHostController) {
                                 sharedPreferences.edit()
                                     .putBoolean("remember_login", true)
                                     .putString("saved_username", username)
+                                    .putString("saved_password", password)
                                     .apply()
                             } else {
                                 sharedPreferences.edit()
                                     .putBoolean("remember_login", false)
                                     .remove("saved_username")
+                                    .remove("saved_password")
                                     .apply()
                             }
 
@@ -272,6 +276,7 @@ fun LoginScreen(navHostController: NavHostController) {
                 is LoginState.Success -> {
                     sharedPreferences.edit()
                         .putString("student_id", username)
+                        .putString("password", password)
                         .apply()
                     navHostController.navigate("home")
                 }

@@ -37,9 +37,11 @@ fun BottomNavigationBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Determine if the navigation bar should be visible
+
     bottomBarState.value = when (currentRoute) {
-        "training_score", "login", "studentInfo", "score", "list_score" -> false
+        "training_score", "login", "studentInfo", "score", "list_score",
+        "exam_schedule" -> false
+
         else -> true
     }
 
@@ -78,7 +80,7 @@ fun BottomNavigationBar(
                             imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
                             contentDescription = item.name,
                             // Slightly smaller padding for better fit
-                            modifier = Modifier.padding(bottom = 2.dp)
+//                            modifier = Modifier.padding(bottom = 2.dp)
                         )
                     },
                     label = {
@@ -96,7 +98,7 @@ fun BottomNavigationBar(
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color.White,
                         selectedTextColor = Color.White,
-                        indicatorColor = HNOULightBlue.copy(alpha = 0.95f),
+                        indicatorColor = HNOULightBlue,
                         unselectedIconColor = Color.White.copy(alpha = 0.6f),
                         unselectedTextColor = Color.White.copy(alpha = 0.6f)
                     )
