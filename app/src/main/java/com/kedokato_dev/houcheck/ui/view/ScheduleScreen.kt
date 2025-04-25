@@ -1,6 +1,7 @@
 package com.kedokato_dev.houcheck.ui.view
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -65,7 +66,9 @@ import com.kedokato_dev.houcheck.data.model.ClassInfo
 import com.kedokato_dev.houcheck.data.model.DaySchedule
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchWeekScheduleRepository
+import com.kedokato_dev.houcheck.ui.LoginScreen
 import com.kedokato_dev.houcheck.ui.state.UiState
+import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.accentColor
 import com.kedokato_dev.houcheck.ui.theme.error
@@ -76,6 +79,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.text.get
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,7 +118,7 @@ fun ScheduleScreen(
 
     LaunchedEffect(weekRange) {
         viewModel.fetchWeekSchedule(
-            authRepository.getSessionId() ?: "94db4274-cf1c-4728-9aab-77228f8c76d0",
+            authRepository.getSessionId().toString(),
             weekRange
         )
     }
@@ -126,7 +130,7 @@ fun ScheduleScreen(
             TopAppBar(
                 title = { Text("Thời khoá biểu") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HNOULightBlue,
+                    containerColor = HNOUDarkBlue,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White,
                     actionIconContentColor = Color.White
@@ -196,7 +200,7 @@ fun ScheduleScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFF2196F3))
+                            .background(HNOUDarkBlue)
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -434,14 +438,18 @@ fun ModernScheduleContent(
     selectedDate: Date,
     modifier: Modifier = Modifier
 ) {
-    val selectedDateStr = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.US).format(selectedDate)
-
-    // Find classes for the selected date, defaulting to showing all if no match
-    val selectedDayKey = remember(selectedDateStr) {
-        weekDays.find { it.startsWith(selectedDateStr.substring(0, 3)) }?.dropLast(12)
-    }
-
     val listState = rememberLazyListState()
+
+    // Trích xuất ngày/tháng/năm từ selectedDate
+    val selectedDateString = SimpleDateFormat("dd/MM/yyyy", Locale("vi")).format(selectedDate)
+    Log.d("SelectedDate", "Selected date string: $selectedDateString")
+
+    // Tìm vị trí ngày được chọn để scroll
+    LaunchedEffect(selectedDate) {
+        val position = weekDays.indexOfFirst { it.contains(selectedDateString) }.takeIf { it >= 0 } ?: 0
+        Log.d("Scrolling", "Scrolling to position: $position for date: $selectedDateString")
+        listState.animateScrollToItem(position)
+    }
 
     LazyColumn(
         modifier = modifier
@@ -449,72 +457,50 @@ fun ModernScheduleContent(
             .padding(horizontal = 16.dp),
         state = listState
     ) {
-        // If we have a selected day, show only that day's classes
-        if (selectedDayKey != null) {
-            val daySchedule = byDays[selectedDayKey]
-            val formattedDate = formatDayDate(weekDays.first { it.contains(selectedDayKey) })
+        weekDays.forEach { day ->
+            item(key = day) {
+                val dayDate = formatDayDate(day)
 
-            item {
-                Text(
-                    text = formatDayName(weekDays.first { it.contains(selectedDayKey) }),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
+                // Kiểm tra xem chuỗi ngày có chứa selectedDateString không
+                val isSelectedDay = day.contains(selectedDateString)
+                Log.d("ScheduleScreen", "Day: $day, Looking for: $selectedDateString, Selected: $isSelectedDay")
 
-                Text(
-                    text = formattedDate,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            if (daySchedule?.classes?.isEmpty() == true) {
-                item {
-                    EmptyDayCard()
-                }
-            } else {
-                items(daySchedule?.classes ?: emptyList()) { classInfo ->
-                    ModernClassCard(classInfo)
-                }
-            }
-        } else {
-            // If no day is selected or match found, show all days (fallback)
-            weekDays.forEach { day ->
-                item {
-                    val dayName = formatDayName(day)
-                    val dayDate = formatDayDate(day)
-
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(
-                            text = dayName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Text(
-                            text = dayDate,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        val dayKey = day.dropLast(12)
-                        val daySchedule = byDays[dayKey]
-
-                        if (daySchedule?.classes?.isEmpty() == true) {
-                            EmptyDayCard()
-                        } else {
-                            daySchedule?.classes?.forEach { classInfo ->
-                                ModernClassCard(classInfo)
+                Column(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .fillMaxWidth()
+                        .let {
+                            if (isSelectedDay) {
+                                it.background(
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(16.dp)
+                                ).padding(horizontal = 8.dp, vertical = 4.dp)
+                            } else {
+                                it
                             }
                         }
-                    }
+                ) {
+                    // Phần còn lại giữ nguyên
+                    Text(
+                        text = dayDate,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    val dayKey = day.dropLast(12)
+                    val daySchedule = byDays[dayKey]
+
+                    if (daySchedule?.classes?.isEmpty() == true) {
+                        EmptyDayCard()
+                    } else {
+                        daySchedule?.classes?.forEach { classInfo ->
+                            ModernClassCard(classInfo)
+                        }
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -554,7 +540,7 @@ fun ModernClassCard(classInfo: ClassInfo) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .height(130.dp),
+            .height(170.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
@@ -596,7 +582,7 @@ fun ModernClassCard(classInfo: ClassInfo) {
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Medium,
-                                color = subjectColor
+                                color = Color.Black
                             )
                         }
                     }
@@ -685,7 +671,7 @@ private fun SessionTypeTag(session: String) {
         else -> Triple(
             MaterialTheme.colorScheme.primaryContainer,
             Color(0xFF4CAF50),  // Xanh (Green)
-            "Học chính"
+            "Học bình thường"
         )
     }
 
