@@ -429,7 +429,7 @@ fun FeaturesSection(navController: NavHostController, context: Context) {
             items(features.size) { index ->
                 EnhancedFeatureGridItem(features[index]) {
                     when (index) {
-                        0 -> navController.navigate("home")
+                        0 -> navController.navigate("week_schedule")
                         1 -> navController.navigate("score")
                         2 -> navController.navigate("studentInfo")
                         3 -> navController.navigate("home")

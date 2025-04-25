@@ -40,7 +40,7 @@ fun BottomNavigationBar(
 
     bottomBarState.value = when (currentRoute) {
         "training_score", "login", "studentInfo", "score", "list_score",
-        "exam_schedule" -> false
+        "exam_schedule", "week_schedule" -> false
 
         else -> true
     }

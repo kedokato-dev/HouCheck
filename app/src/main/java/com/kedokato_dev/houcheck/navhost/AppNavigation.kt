@@ -27,6 +27,7 @@ import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.view.ExamScheduleScreen
 import com.kedokato_dev.houcheck.ui.view.HomeScreen
 import com.kedokato_dev.houcheck.ui.view.ListScoreScreen
+import com.kedokato_dev.houcheck.ui.view.ScheduleScreen
 import com.kedokato_dev.houcheck.ui.view.ScoreScreen
 import com.kedokato_dev.houcheck.ui.view.SettingScreen
 import com.kedokato_dev.houcheck.ui.view.StudentInfoScreen
@@ -50,25 +51,40 @@ fun AppNavigation(navController: NavHostController) {
                 bottomBarState = bottomBarState,
                 items = listOf(
                     BottomNavItem("Trang chủ", "home", Icons.Filled.Home, Icons.Outlined.Home),
-                    BottomNavItem("Hồ sơ", "studentInfo", Icons.Filled.Person, Icons.Outlined.Person),
-                    BottomNavItem("Cài đặt", "settings", Icons.Filled.Settings, Icons.Outlined.Settings)
+                    BottomNavItem(
+                        "Hồ sơ",
+                        "studentInfo",
+                        Icons.Filled.Person,
+                        Icons.Outlined.Person
+                    ),
+                    BottomNavItem(
+                        "Cài đặt",
+                        "settings",
+                        Icons.Filled.Settings,
+                        Icons.Outlined.Settings
+                    )
                 ),
                 primaryColor = HNOUDarkBlue
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
             NavHost(navController = navController, startDestination = "login") {
                 composable("home") { HomeScreen(navController) }
                 composable("login") { LoginScreen(navController) }
                 composable("studentInfo") { StudentInfoScreen(navController) }
                 composable("settings") { SettingScreen(navController) }
                 composable("training_score") { TrainingScoreScreen(navController) }
-                composable ("score") { ScoreScreen(navController) }
+                composable("score") { ScoreScreen(navController) }
                 composable("list_score") { ListScoreScreen(navController) }
-                composable ("exam_schedule") { ExamScheduleScreen(navController) }
-                }
+                composable("exam_schedule") { ExamScheduleScreen(navController) }
+                composable("week_schedule") { ScheduleScreen(navController) }
             }
         }
     }
+}
 
