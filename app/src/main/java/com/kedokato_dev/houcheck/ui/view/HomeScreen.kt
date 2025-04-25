@@ -1,5 +1,7 @@
 package com.kedokato_dev.houcheck.ui.view
 
+// In HomeScreen.kt
+
 import FetchInfoStudentViewModel
 import FetchState
 import android.content.Context
@@ -8,7 +10,18 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
@@ -18,8 +31,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,14 +65,27 @@ import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.data.api.ApiClient
 import com.kedokato_dev.houcheck.data.api.FetchInfoStudentService
 import com.kedokato_dev.houcheck.data.api.FetchScoreService
+import com.kedokato_dev.houcheck.data.api.FetchWeekScheduleService
+import com.kedokato_dev.houcheck.data.model.ScheduleResponse
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchScoreRepository
 import com.kedokato_dev.houcheck.data.repository.FetchStudentInfoRepository
+import com.kedokato_dev.houcheck.data.repository.FetchWeekScheduleRepository
 import com.kedokato_dev.houcheck.database.dao.AppDatabase
+import com.kedokato_dev.houcheck.ui.state.UiState
+import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.backgroundColor
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 import com.kedokato_dev.houcheck.ui.theme.secondaryColor
-import com.kedokato_dev.houcheck.ui.viewmodel.*
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchInfoStudentViewModelFactory
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchScoreState
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchScoreViewModel
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchScoreViewModelFactory
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchWeekScheduleViewModel
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchWeekScheduleViewModelFactory
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
@@ -78,14 +115,46 @@ fun HomeScreen(navController: NavHostController) {
         factory = FetchScoreViewModelFactory(fetchScoreRepo)
     )
 
+    // Add Week Schedule ViewModel
+    val fetchWeekScheduleApi = remember { ApiClient.instance.create(FetchWeekScheduleService::class.java) }
+    val fetchWeekScheduleRepository = remember { FetchWeekScheduleRepository(fetchWeekScheduleApi) }
+    val fetchWeekScheduleViewModel: FetchWeekScheduleViewModel = viewModel(
+        factory = FetchWeekScheduleViewModelFactory(fetchWeekScheduleRepository)
+    )
+
     val fetchState by viewModel.fetchState.collectAsState()
     val fetchScoreState by fetchScoreViewModel.fetchState.collectAsState()
 
+    // Week Schedule State
+    val weekScheduleState by fetchWeekScheduleViewModel.state.collectAsState()
+
+    // Get today's date in the correct format
+    val today = remember { Calendar.getInstance() }
+    val dateFormat = remember { SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()) }
+    val weekStart = remember {
+        val cal = Calendar.getInstance()
+        cal.time = today.time
+        while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+            cal.add(Calendar.DATE, -1)
+        }
+        cal.time
+    }
+    val weekRange = remember(weekStart) {
+        val start = Calendar.getInstance().apply { time = weekStart }
+        val end = Calendar.getInstance().apply {
+            time = weekStart
+            add(Calendar.DAY_OF_YEAR, 6)
+        }
+        "${dateFormat.format(start.time)}-${dateFormat.format(end.time)}"
+    }
+    val todayDateString = remember { SimpleDateFormat("dd/MM/yyyy", Locale("vi")).format(today.time) }
 
 
     LaunchedEffect(Unit) {
         viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
         fetchScoreViewModel.fetchScore(authRepository.getSessionId().toString())
+        // Fetch the week schedule when the HomeScreen is launched
+        fetchWeekScheduleViewModel.fetchWeekSchedule(authRepository.getSessionId().toString(), weekRange)
     }
 
     Box(
@@ -114,7 +183,7 @@ fun HomeScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Thời khóa biểu hôm nay
-            TodayScheduleSection()
+            TodayScheduleSection(weekScheduleState = weekScheduleState, todayDateString = todayDateString, navController)
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -488,8 +557,10 @@ fun EnhancedFeatureGridItem(item: FeatureItem, onClick: () -> Unit = {}) {
     }
 }
 
+// In HomeScreen.kt
+
 @Composable
-fun TodayScheduleSection() {
+fun TodayScheduleSection(weekScheduleState: UiState<ScheduleResponse>, todayDateString: String, navHostController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -506,7 +577,9 @@ fun TodayScheduleSection() {
                 fontWeight = FontWeight.Bold
             )
 
-            TextButton(onClick = { /* TODO: Navigate to full schedule */ }) {
+            TextButton(onClick = {
+                navHostController.navigate("week_schedule")
+            }) {
                 Text(
                     text = "Xem tất cả",
                     color = Color(0xFF1565C0)
@@ -514,42 +587,108 @@ fun TodayScheduleSection() {
             }
         }
 
-        // Empty state or classes for today
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            // Example schedule item
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Class 1
-                ScheduleItem(
-                    time = "7:00 - 9:30",
-                    subject = "Lập trình ứng dụng di động",
-                    room = "A2-501",
-                    backgroundColor = Color(0xFF1565C0).copy(alpha = 0.1f)
-                )
+        // Schedule content based on the state
+        when (weekScheduleState) {
+            is UiState.Loading -> {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+            is UiState.Error -> {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+                        Text("Error loading schedule")
+                    }
+                }
+            }
+            is UiState.Success -> {
+                val schedule = weekScheduleState.data
+                //Find the correct day
+                val todaySchedule = schedule.weekDays.find { it.contains(todayDateString) }?.let { day ->
+                    val dayKey = day.dropLast(12)
+                    schedule.byDays[dayKey]
+                }
 
-                Divider(modifier = Modifier.padding(horizontal = 16.dp))
-
-                // Class 2
-                ScheduleItem(
-                    time = "9:45 - 11:30",
-                    subject = "Cơ sở dữ liệu",
-                    room = "B1-303",
-                    backgroundColor = Color(0xFF4CAF50).copy(alpha = 0.1f)
-                )
-
-                // Add more classes as needed
+                if (todaySchedule?.classes?.isNotEmpty() == true) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            todaySchedule.classes.forEach { classInfo ->
+                                ScheduleItem(
+                                    status = classInfo.session,
+                                    session = classInfo.timeSlot,
+                                    subject = classInfo.subject,
+                                    room = classInfo.room,
+                                    backgroundColor = getClassStatusColor(classInfo.session).copy(alpha = 0.1f) // You'll need to define this function or adapt it
+                                )
+                                if (todaySchedule.classes.indexOf(classInfo) < todaySchedule.classes.size - 1) {
+                                    Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Empty state
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+                            Text("Không có lịch học hôm nay")
+                        }
+                    }
+                }
+            }
+            else -> {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+                        Text("Không có dữ liệu")
+                    }
+                }
             }
         }
     }
 }
 
+// New function to get color based on class status
+private fun getClassStatusColor(session: String): Color {
+    return when {
+        session.contains("bù") -> Color(0xFF9C27B0)
+        session.contains("Nghỉ") -> Color(0xFFF44336)
+        else -> Color(0xFF4CAF50)
+    }
+}
+
 @Composable
-fun ScheduleItem(time: String, subject: String, room: String, backgroundColor: Color) {
+fun ScheduleItem(status: String,session: String, subject: String, room: String, backgroundColor: Color) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -563,7 +702,7 @@ fun ScheduleItem(time: String, subject: String, room: String, backgroundColor: C
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = time.split(" - ")[0],
+                text = session,
                 fontWeight = FontWeight.Bold,
                 color = backgroundColor.copy(alpha = 10f)
             )
@@ -582,16 +721,16 @@ fun ScheduleItem(time: String, subject: String, room: String, backgroundColor: C
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    painter = painterResource(id = R.drawable.schedule_date_svgrepo_com),
+                    painter = painterResource(id = R.drawable.status),
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-//                    tint = Color.Gray
+                    tint = HNOULightBlue
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
 
                 Text(
-                    text = time,
+                    text = status,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -599,10 +738,10 @@ fun ScheduleItem(time: String, subject: String, room: String, backgroundColor: C
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Icon(
-                    painter = painterResource(id = R.drawable.schedule_date_svgrepo_com), // Thay thế bằng icon location
+                    painter = painterResource(id = R.drawable.room_key), // Thay thế bằng icon location
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-//                    tint = Color.Gray
+                    tint = HNOULightBlue
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
