@@ -58,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.data.api.ApiClient
@@ -67,6 +68,7 @@ import com.kedokato_dev.houcheck.data.model.DaySchedule
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchWeekScheduleRepository
 import com.kedokato_dev.houcheck.ui.LoginScreen
+import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
@@ -168,7 +170,10 @@ fun ScheduleScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = HNOULightBlue)
+                    LoadingComponent(
+                        primaryColor = HNOUDarkBlue,
+                        "Đang tải thông tin thời khoá biểu"
+                    )
                 }
             }
 

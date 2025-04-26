@@ -74,6 +74,7 @@ import com.kedokato_dev.houcheck.data.repository.FetchWeekScheduleRepository
 import com.kedokato_dev.houcheck.database.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
+import com.kedokato_dev.houcheck.ui.theme.HouCheckTheme
 import com.kedokato_dev.houcheck.ui.theme.backgroundColor
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 import com.kedokato_dev.houcheck.ui.theme.secondaryColor
@@ -598,7 +599,7 @@ fun TodayScheduleSection(weekScheduleState: UiState<ScheduleResponse>, todayDate
                     colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = HNOULightBlue)
                     }
                 }
             }
@@ -765,8 +766,8 @@ data class FeatureItem(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
-//    AppTheme {
-//        val navController = NavHostController(context = LocalContext.current)
-//        HomeScreen(navController)
-//    }
+    HouCheckTheme {
+        val navController = NavHostController(context = LocalContext.current)
+        HomeScreen(navController)
+    }
 }

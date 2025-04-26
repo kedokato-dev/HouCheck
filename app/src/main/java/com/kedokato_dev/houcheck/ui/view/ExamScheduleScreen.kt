@@ -2,24 +2,54 @@ package com.kedokato_dev.houcheck.ui.view
 
 import android.content.Context
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,10 +61,15 @@ import com.kedokato_dev.houcheck.data.model.ExamSchedule
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchExamScheduleRepository
 import com.kedokato_dev.houcheck.database.dao.AppDatabase
-import com.kedokato_dev.houcheck.ui.viewmodel.*
-import kotlinx.coroutines.launch
+import com.kedokato_dev.houcheck.ui.components.EmptyStateComponent
+import com.kedokato_dev.houcheck.ui.components.LoadingComponent
+import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchExamScheduleState
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchExamScheduleViewModel
+import com.kedokato_dev.houcheck.ui.viewmodel.FetchExamScheduleViewModelFactory
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,14 +95,17 @@ fun ExamScheduleScreen(navController: NavHostController) {
         viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
     }
 
+    // Theme colors
     val primaryColor = Color(0xFF03A9F4)
+    val secondaryColor = Color(0xFF0277BD)
+    val backgroundColor = Color(0xFFF8F7FC)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Lịch thi",
+                        "Lịch Thi",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         lineHeight = 24.sp
@@ -103,9 +141,9 @@ fun ExamScheduleScreen(navController: NavHostController) {
                 )
             )
         },
-        containerColor = Color(0xFFF8F7FC)
+        containerColor = backgroundColor
     ) { paddingValues ->
-        // Rest of your UI remains the same...
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -115,64 +153,65 @@ fun ExamScheduleScreen(navController: NavHostController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 when (fetchState) {
                     is FetchExamScheduleState.Idle -> {
-                        EmptyStateSection(
-                            onFetchClick = {
-                                viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
+                        EmptyStateComponent(
+                            title = "Chưa có lịch thi",
+                            subtitle = "Bấm nút bên dưới để tải lịch thi",
+                            buttonText = "Tải lịch thi",
+                            onButtonClick = {
+                                viewModel.fetchExamSchedules(
+                                    authRepository.getSessionId().toString()
+                                )
                             },
-                            primaryColor = primaryColor
+                            primaryColor = HNOUDarkBlue,
                         )
                     }
                     is FetchExamScheduleState.Loading -> {
-                        LoadingStateSection(primaryColor = primaryColor)
+                        LoadingComponent(primaryColor = primaryColor,
+                            title = "Đang tải lịch thi",)
                     }
                     is FetchExamScheduleState.Success -> {
                         val schedules = (fetchState as FetchExamScheduleState.Success).schedules
 
-                        // Chỉ hiển thị lịch thi có ngày lớn hơn ngày hiện tại
-                        val currentDate = Calendar.getInstance().time
+                        val currentDate = Calendar.getInstance().apply {
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }.time // Lấy ngày hiện tại và reset giờ về 00:00
+
                         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
                         val filteredSchedules = schedules.filter { schedule ->
                             try {
                                 val examDate = schedule.date?.let { dateFormat.parse(it) }
-                                examDate != null && examDate.after(currentDate)
+                                examDate != null && (examDate.after(currentDate) || examDate == currentDate)
                             } catch (e: Exception) {
                                 true // Giữ lại nếu không thể phân tích ngày
                             }
                         }
 
                         if (filteredSchedules.isEmpty()) {
-                            Text(
-                                text = "Không có lịch thi sắp tới để hiển thị",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.Gray,
-                                modifier = Modifier.padding(16.dp)
-                            )
+                            NoExamsSection(primaryColor)
                         } else {
-                            // Nhóm lịch thi theo ngày
                             val groupedSchedules = filteredSchedules.groupBy { it.date }
 
-                            // Hiển thị theo từng ngày
                             groupedSchedules.forEach { (date, schedulesForDate) ->
-                                // Hiển thị ngày thi
-                                Text(
-                                    text = "Ngày thi: $date",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF0277BD),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp)
+                                DateHeader(
+                                    date = date ?: "Không có ngày",
+                                    primaryColor = secondaryColor
                                 )
 
-                                // Hiển thị danh sách các môn thi trong ngày đó
                                 schedulesForDate.forEach { schedule ->
-                                    ExamScheduleCard(schedule = schedule)
+                                    EnhancedExamScheduleCard(
+                                        schedule = schedule,
+                                        primaryColor = primaryColor,
+                                        secondaryColor = secondaryColor
+                                    )
                                     Spacer(modifier = Modifier.height(12.dp))
                                 }
 
@@ -180,6 +219,7 @@ fun ExamScheduleScreen(navController: NavHostController) {
                             }
                         }
                     }
+
                     is FetchExamScheduleState.Error -> {
                         ErrorStateSection(
                             message = (fetchState as FetchExamScheduleState.Error).message,
@@ -196,167 +236,181 @@ fun ExamScheduleScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun ExamScheduleCard(schedule: ExamSchedule) {
-    Surface(
+private fun DateHeader(date: String, primaryColor: Color) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.DateRange,
+            contentDescription = "Ngày thi",
+            tint = primaryColor,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Ngày thi: $date",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = primaryColor
+        )
+    }
+    Divider(
+        color = primaryColor.copy(alpha = 0.3f),
+        thickness = 1.dp,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun EnhancedExamScheduleCard(
+    schedule: ExamSchedule,
+    primaryColor: Color,
+    secondaryColor: Color
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
         color = Color.White,
         shadowElevation = 4.dp
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Layout cha chứa thông tin buổi thi và môn thi
-            Row(
+            // Time section with gradient background
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Phần bên trái: Buổi thi và giờ bắt đầu
-                Column(
-                    modifier = Modifier
-                        .weight(0.3f)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = schedule.session ?: "N/A",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0277BD)
+                    .weight(0.3f)
+                    .fillMaxHeight()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                primaryColor,
+                                secondaryColor
+                            )
+                        )
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = schedule.session ?: "N/A",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = schedule.time ?: "N/A",
+                    fontSize = 18.sp,
+                    color = Color.White
+                )
+            }
+
+            // Subject information
+            Column(
+                modifier = Modifier
+                    .weight(0.7f)
+                    .padding(16.dp)
+            ) {
+                // Subject name
+                Text(
+                    text = schedule.subject ?: "N/A",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                // Room with icon
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "Phòng thi",
+                        tint = secondaryColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = schedule.time ?: "N/A",
-                        fontSize = 20.sp,
-                        color = Color(0xFF333333)
+                        text = "Phòng: ${schedule.room ?: "N/A"}",
+                        fontSize = 15.sp,
+                        color = Color(0xFF555555)
                     )
                 }
 
-                // Đường ngăn cách giữa phần thông tin và buổi thi
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .fillMaxHeight()
-                        .background(Color(0xFF03A9F4)) // Màu xanh lam
-                )
-
-                // Phần bên phải: Thông tin môn thi
-                Column(
-                    modifier = Modifier
-                        .weight(0.7f)
-                        .padding(16.dp)
+                // Student number with icon
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 ) {
-                    // Tên môn thi (bỏ icon)
-                    Text(
-                        text = schedule.subject ?: "N/A",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF333333),
-                        modifier = Modifier.padding(bottom = 8.dp)
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Số báo danh",
+                        tint = secondaryColor,
+                        modifier = Modifier.size(20.dp)
                     )
-
-                    // Phòng thi với icon
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Phòng thi",
-                            tint = Color(0xFF0277BD),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = schedule.room ?: "N/A",
-                            fontSize = 14.sp,
-                            color = Color(0xFF333333)
-                        )
-                    }
-
-                    // Số báo danh với icon
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Số báo danh",
-                            tint = Color(0xFF0277BD),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "SBD: ${schedule.studentNumber ?: "N/A"}",
-                            fontSize = 14.sp,
-                            color = Color(0xFF333333)
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "SBD: ${schedule.studentNumber ?: "N/A"}",
+                        fontSize = 15.sp,
+                        color = Color(0xFF555555)
+                    )
                 }
             }
         }
     }
 }
 
+
+
+
 @Composable
-private fun EmptyStateSection(onFetchClick: () -> Unit, primaryColor: Color) {
+private fun NoExamsSection(primaryColor: Color) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(vertical = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            "Chưa có dữ liệu lịch thi",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+        // Icon for no exams
+        Icon(
+            imageVector = Icons.Default.DateRange,
+            contentDescription = "Không có lịch thi",
+            tint = primaryColor.copy(alpha = 0.7f),
+            modifier = Modifier
+                .size(80.dp)
+                .padding(bottom = 16.dp)
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        ElevatedButton(
-            onClick = onFetchClick,
-            colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = primaryColor,
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(12.dp),
-            elevation = ButtonDefaults.elevatedButtonElevation(
-                defaultElevation = 6.dp,
-                pressedElevation = 8.dp
-            ),
-            modifier = Modifier.height(56.dp)
-        ) {
-            Text(
-                "Tải dữ liệu",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
 
-@Composable
-private fun LoadingStateSection(primaryColor: Color) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        CircularProgressIndicator(
-            color = primaryColor,
-            strokeWidth = 4.dp,
-            modifier = Modifier.size(48.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Đang tải dữ liệu lịch thi...",
-            style = MaterialTheme.typography.bodyLarge,
-            color = Color.Gray
+            "Chưa có lịch thi sắp tới",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            color = Color(0xFF555555)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            "Bạn sẽ thấy lịch thi khi có lịch mới",
+            fontSize = 14.sp,
+            color = Color.Gray,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
         )
     }
 }
@@ -364,36 +418,67 @@ private fun LoadingStateSection(primaryColor: Color) {
 @Composable
 private fun ErrorStateSection(message: String, onRetryClick: () -> Unit, primaryColor: Color) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Error icon
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(40.dp))
+                .background(Color.Red.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "!",
+                fontSize = 48.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Red.copy(alpha = 0.8f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             "Đã có lỗi xảy ra",
-            style = MaterialTheme.typography.headlineSmall,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Red.copy(alpha = 0.8f)
         )
+
         Spacer(modifier = Modifier.height(8.dp))
+
         Text(
             message,
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = 15.sp,
             color = Color.Gray,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
         )
+
         Spacer(modifier = Modifier.height(24.dp))
-        OutlinedButton(
+
+        Button(
             onClick = onRetryClick,
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                width = 2.dp,
-                brush = Brush.horizontalGradient(listOf(primaryColor, primaryColor.copy(alpha = 0.7f)))
+            colors = ButtonDefaults.buttonColors(
+                containerColor = primaryColor,
+                contentColor = Color.White
             ),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(24.dp),
             modifier = Modifier.height(48.dp)
         ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Thử lại",
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 "Thử lại",
-                color = primaryColor,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
         }
