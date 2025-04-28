@@ -117,7 +117,7 @@ fun LoginScreen(navHostController: NavHostController) {
             )
 
             Text(
-                text = "Mở cơ hội học tập cho mọi người",
+                text = "Nhanh chóng - Tiện lợi - Hiệu quả",
                 style = MaterialTheme.typography.titleMedium,
                 color = HNOULightBlue,
                 textAlign = TextAlign.Center,
@@ -274,7 +274,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(text = "Version: 1.1.1-rc1" , fontSize = 12.sp, color = Color.Gray)
+                    Text(text = stringResource(R.string.version_app) , fontSize = 12.sp, color = Color.Gray)
                 }
             }
 

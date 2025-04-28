@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -105,7 +106,7 @@ fun SplashScreen(onSplashScreenFinish: () -> Unit) {
                 enter = fadeIn(animationSpec = tween(1500))
             ) {
                 Text(
-                    text = "Ứng dụng lịch học dành cho sinh viên",
+                    text = "Nhanh chóng - Tiện lợi - Hiệu quả",
                     color = Color.White,
                     fontSize = 16.sp
                 )
@@ -129,7 +130,7 @@ fun SplashScreen(onSplashScreenFinish: () -> Unit) {
             contentAlignment = Alignment.BottomCenter
         ) {
             Text(
-                text = "Phiên bản 1.0.0",
+                text  = stringResource(R.string.version_app),
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 14.sp
             )
