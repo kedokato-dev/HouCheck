@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.data.api.ApiClient
 import com.kedokato_dev.houcheck.data.api.FetchWeekScheduleService
 import com.kedokato_dev.houcheck.data.model.ClassInfo
@@ -152,10 +154,11 @@ fun ScheduleScreen(
                         selectedDate = currentDay.time
                         selectedWeekStart = getWeekStart(currentDay).time
                     }) {
-                        Text(
-                            text = "Hôm nay",
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyMedium
+                        Icon(
+                            painter = painterResource(R.drawable.today),
+                            modifier = Modifier.size(24.dp),
+                            contentDescription = "Today",
+                            tint = Color.White
                         )
                     }
                 }
@@ -241,7 +244,7 @@ fun ScheduleScreen(
                             selectedDate = selectedDate,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF2196F3))
+                                .background(HNOUDarkBlue)
                                 .padding(bottom = 16.dp)
                         )
                     }
