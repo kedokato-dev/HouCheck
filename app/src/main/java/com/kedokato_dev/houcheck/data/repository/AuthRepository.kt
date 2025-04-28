@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import com.kedokato_dev.houcheck.data.api.ApiClient
 import com.kedokato_dev.houcheck.data.api.AuthService
 import com.kedokato_dev.houcheck.data.api.LoginRequest
+import com.kedokato_dev.houcheck.database.dao.AccountDAO
+import com.kedokato_dev.houcheck.database.entity.AccountEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -11,6 +13,9 @@ class AuthRepository(private val sharedPreferences: SharedPreferences) {
     private val authService: AuthService by lazy {
         ApiClient.instance.create(AuthService::class.java)
     }
+
+
+
 
     // Cache sessionId in memory for faster access
     private var cachedSessionId: String? = null
