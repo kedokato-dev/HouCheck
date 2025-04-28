@@ -16,7 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -30,42 +30,52 @@ import com.kedokato_dev.houcheck.ui.view.ListScoreScreen
 import com.kedokato_dev.houcheck.ui.view.ScheduleScreen
 import com.kedokato_dev.houcheck.ui.view.ScoreScreen
 import com.kedokato_dev.houcheck.ui.view.SettingScreen
+import com.kedokato_dev.houcheck.ui.view.SplashScreen
 import com.kedokato_dev.houcheck.ui.view.StudentInfoScreen
 import com.kedokato_dev.houcheck.ui.view.TrainingScoreScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    val bottomBarState = rememberSaveable { mutableStateOf(false) }
-
+    // Start with the initial state explicitly set to false
+    val initialRoute = remember { mutableStateOf("splash") }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentRoute = navBackStackEntry?.destination?.route ?: initialRoute.value
 
-    bottomBarState.value = currentRoute != "login"
+    // Initialize a state to indicate if app has fully started - initially false
+    val appFullyStarted = remember { mutableStateOf(false) }
+
+    // Determine bottom bar visibility directly
+    val bottomBarVisible = currentRoute !in listOf(
+        "training_score", "login", "studentInfo", "score", "list_score", "splash",
+        "exam_schedule", "week_schedule"
+    ) && appFullyStarted.value
 
     Scaffold(
         contentWindowInsets = WindowInsets.systemBars,
         bottomBar = {
-            BottomNavigationBar(
-                navController = navController,
-                bottomBarState = bottomBarState,
-                items = listOf(
-                    BottomNavItem("Trang chủ", "home", Icons.Filled.Home, Icons.Outlined.Home),
-                    BottomNavItem(
-                        "Hồ sơ",
-                        "studentInfo",
-                        Icons.Filled.Person,
-                        Icons.Outlined.Person
+            // Only include bottom bar in composition if it should be visible
+            if (bottomBarVisible) {
+                BottomNavigationBar(
+                    navController = navController,
+                    items = listOf(
+                        BottomNavItem("Trang chủ", "home", Icons.Filled.Home, Icons.Outlined.Home),
+                        BottomNavItem(
+                            "Hồ sơ",
+                            "studentInfo",
+                            Icons.Filled.Person,
+                            Icons.Outlined.Person
+                        ),
+                        BottomNavItem(
+                            "Cài đặt",
+                            "settings",
+                            Icons.Filled.Settings,
+                            Icons.Outlined.Settings
+                        )
                     ),
-                    BottomNavItem(
-                        "Cài đặt",
-                        "settings",
-                        Icons.Filled.Settings,
-                        Icons.Outlined.Settings
-                    )
-                ),
-                primaryColor = HNOUDarkBlue
-            )
+                    primaryColor = HNOUDarkBlue
+                )
+            }
         }
     ) { innerPadding ->
         Box(
@@ -73,18 +83,32 @@ fun AppNavigation(navController: NavHostController) {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            NavHost(navController = navController, startDestination = "login") {
-                composable("home") { HomeScreen(navController) }
+            NavHost(navController = navController, startDestination = "splash") {
+                composable("home") {
+                    // When reaching home screen, app is considered fully started
+                    appFullyStarted.value = true
+                    HomeScreen(navController)
+                }
                 composable("login") { LoginScreen(navController) }
                 composable("studentInfo") { StudentInfoScreen(navController) }
-                composable("settings") { SettingScreen(navController) }
+                composable("settings") {
+                    // When reaching settings screen, app is considered fully started
+                    appFullyStarted.value = true
+                    SettingScreen(navController)
+                }
                 composable("training_score") { TrainingScoreScreen(navController) }
                 composable("score") { ScoreScreen(navController) }
                 composable("list_score") { ListScoreScreen(navController) }
                 composable("exam_schedule") { ExamScheduleScreen(navController) }
                 composable("week_schedule") { ScheduleScreen(navController) }
+                composable("splash") {
+                    SplashScreen {
+                        navController.navigate("login") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    }
+                }
             }
         }
     }
 }
-

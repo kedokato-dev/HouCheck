@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.google.gson.internal.GsonBuildConfig
 import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.data.repository.AccountRepository
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
@@ -43,6 +44,8 @@ import com.kedokato_dev.houcheck.ui.viewmodel.AuthViewModelFactory
 import com.kedokato_dev.houcheck.ui.viewmodel.LoginState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+
+
 
 @Composable
 fun LoginScreen(navHostController: NavHostController) {
@@ -271,7 +274,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(text = stringResource(id = R.string.version_app), fontSize = 12.sp, color = Color.Gray)
+                    Text(text = "Version: 1.1.1-rc1" , fontSize = 12.sp, color = Color.Gray)
                 }
             }
 
