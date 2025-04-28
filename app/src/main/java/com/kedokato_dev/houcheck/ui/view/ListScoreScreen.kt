@@ -67,7 +67,9 @@ import com.kedokato_dev.houcheck.data.model.CourseResult
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchListScoreRepository
 import com.kedokato_dev.houcheck.database.dao.AppDatabase
+import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.state.UiState
+import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchListScoreViewModel
@@ -232,11 +234,11 @@ fun ListScoreScreen(
             }
 
             is UiState.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxWidth()
-                        .wrapContentSize()
+                LoadingComponent(
+                    HNOUDarkBlue,
+                    "Đang tải dữ liệu điểm",
+                    "Vui lòng chờ trong giây lát",
+
                 )
             }
 

@@ -502,7 +502,11 @@ fun FeaturesSection(navController: NavHostController, context: Context) {
                         0 -> navController.navigate("week_schedule")
                         1 -> navController.navigate("score")
                         2 -> navController.navigate("studentInfo")
-                        3 -> navController.navigate("home")
+                        3 -> Toast.makeText(
+                            context,
+                            "Chức năng đang phát triển",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         4 -> navController.navigate("exam_schedule")
                         5 -> navController.navigate("training_score")
                         6, 7 -> Toast.makeText(

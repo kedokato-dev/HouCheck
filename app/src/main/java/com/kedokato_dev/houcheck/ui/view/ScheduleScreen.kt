@@ -30,10 +30,13 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -79,6 +82,7 @@ import com.kedokato_dev.houcheck.ui.theme.error
 import com.kedokato_dev.houcheck.ui.theme.makeUp
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchWeekScheduleViewModel
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchWeekScheduleViewModelFactory
+import org.xmlpull.v1.sax2.Driver
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -488,7 +492,7 @@ fun ModernScheduleContent(
                             }
                         }
                 ) {
-                    // Phần còn lại giữ nguyên
+
                     Text(
                         text = dayDate,
                         style = MaterialTheme.typography.bodyLarge,
@@ -611,7 +615,7 @@ fun ModernClassCard(classInfo: ClassInfo) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Teacher info with icon
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -640,11 +644,11 @@ fun ModernClassCard(classInfo: ClassInfo) {
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                             shape = RoundedCornerShape(8.dp)
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp) // Increased padding for better touch targets
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.LocationOn,
-                        contentDescription = null,
+                        contentDescription = "Location", // Added content description for accessibility
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -653,6 +657,35 @@ fun ModernClassCard(classInfo: ClassInfo) {
 
                     Text(
                         text = classInfo.room,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp)) // Added proper spacing between text elements
+
+                    // Added a small visual divider between room and session
+                    Box(
+                        modifier = Modifier
+                            .height(12.dp)
+                            .width(1.dp)
+                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Added session icon for visual consistency
+                    Icon(
+                        imageVector = Icons.Outlined.Star, // Added time/schedule icon
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Text(
+                        text =  classInfo.timeSlot,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
