@@ -68,34 +68,7 @@ class FetchTrainingScoreRepository(
                 dao.deleteAllTrainingScores()
                 val trainingScores = response.body()
                 trainingScores?.let { scores ->
-                    val entities = scores.data.map {
-                        TrainingScoreEntity(
-                            semester = it.semester,
-                            academicYear = it.academicYear,
-                            totalScore = it.totalScore,
-                            rank = it.rank
-                        )
-                    }
-                    for (entity in entities) {
-                        dao.insertTrainingScore(entity)
-                    }
-                    return@withContext Result.success(scores)
-                } ?: return@withContext Result.failure(Exception("Training score data is null"))
-            } else {
-                return@withContext Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            return@withContext Result.failure(e)
-        }
-    }
-
-    suspend fun refreshTrainingScore(sessionId: String): Result<TrainingScoreResponse> = withContext(Dispatchers.IO) {
-        try {
-            dao.deleteAllTrainingScores() // Clear local data before fetching new data
-            val response = api.fetchTrainingScore(sessionId)
-            if (response.isSuccessful) {
-                val trainingScores = response.body()
-                trainingScores?.let { scores ->
+                    // Lưu vào DB
                     val entities = scores.data.map {
                         TrainingScoreEntity(
                             semester = it.semester,
