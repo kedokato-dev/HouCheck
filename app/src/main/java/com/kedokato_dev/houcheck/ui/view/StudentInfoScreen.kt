@@ -3,7 +3,6 @@ package com.kedokato_dev.houcheck.ui.view
 import FetchInfoStudentViewModel
 import FetchState
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -26,12 +25,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,7 +42,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -71,6 +73,10 @@ import com.kedokato_dev.houcheck.data.model.Student
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
 import com.kedokato_dev.houcheck.data.repository.FetchStudentInfoRepository
 import com.kedokato_dev.houcheck.database.dao.AppDatabase
+import com.kedokato_dev.houcheck.ui.theme.accentColor
+import com.kedokato_dev.houcheck.ui.theme.backgroundColor
+import com.kedokato_dev.houcheck.ui.theme.primaryColor
+import com.kedokato_dev.houcheck.ui.theme.secondaryColor
 import com.kedokato_dev.houcheck.ui.viewmodel.FetchInfoStudentViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,21 +106,26 @@ fun StudentInfoScreen(navHostController: NavHostController) {
         viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
     }
 
-    // Màu sắc hiện đại
-    val primaryColor = Color(0xFF03A9F4) // Tím đậm
-    val secondaryColor = Color(0xFF6DB4EC) // Tím nhạt hơn
-    val gradientColors = listOf(primaryColor, secondaryColor)
+
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Hồ sơ sinh viên",
-                        fontSize = 20.sp, // fontSize nhỏ lại cho phù hợp với SmallTopAppBar
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 24.sp
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Thông tin sinh viên",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 24.sp
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navHostController.popBackStack() }) {
@@ -131,91 +142,33 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                     navigationIconContentColor = Color.White
                 )
             )
-
         },
-        containerColor = Color(0xFFF8F7FC) // Nền sáng cho toàn màn hình
+        containerColor = backgroundColor
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState) 
+                    .verticalScroll(scrollState)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Header với phần thông tin cơ bản và nút xem lịch học
+                StudentHeaderCard(
+                    fetchState = fetchState,
+                    onViewScheduleClick = {
+                        // Navigate to schedule screen
+                        navHostController.navigate("home")
+                    },
+                    primaryColor = primaryColor,
+                    secondaryColor = secondaryColor
+                )
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 24.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(
-                            brush = Brush.verticalGradient(gradientColors)
-                        )
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Hình ảnh hồ sơ tròn với viền
-                        Box(
-                            modifier = Modifier
-                                .size(120.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f))
-                                .padding(4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.no_avatar),
-                                contentDescription = "Hình ảnh sinh viên",
-                                modifier = Modifier
-                                    .size(112.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        when (fetchState) {
-                            is FetchState.Success -> {
-                                val student = (fetchState as FetchState.Success).student
-                                Text(
-                                    student.studentName.toString(), // Sử dụng toString() để đảm bảo an toàn
-                                    style = MaterialTheme.typography.headlineMedium.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center
-                                )
-
-                                Text(
-                                    "Mã SV: ${student.studentId}",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                            else -> {
-                                Text(
-                                    "Hồ sơ sinh viên",
-                                    style = MaterialTheme.typography.headlineMedium.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-                    }
-                }
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Xử lý các trạng thái
                 when (fetchState) {
@@ -231,9 +184,8 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                         LoadingStateSection(primaryColor = primaryColor)
                     }
                     is FetchState.Success -> {
-                        // Phải xử lý đúng kiểu dữ liệu ở đây
                         val student = (fetchState as FetchState.Success).student
-                        StudentDetailsSection(student = student)
+                        StudentDetailsSection(student = student, accentColor = accentColor)
                     }
                     is FetchState.Error -> {
                         ErrorStateSection(
@@ -250,9 +202,177 @@ fun StudentInfoScreen(navHostController: NavHostController) {
     }
 }
 
-// Các hàm khác giữ nguyên, nhưng điều chỉnh StudentDetailsSection để xử lý kiểu dữ liệu đúng
 @Composable
-private fun StudentDetailsSection(student: Student) {
+private fun StudentHeaderCard(
+    fetchState: FetchState,
+    onViewScheduleClick: () -> Unit,
+    primaryColor: Color,
+    secondaryColor: Color
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Phần header với gradient
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(listOf(primaryColor, secondaryColor))
+                    )
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Hình ảnh profile
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.2f))
+                            .padding(3.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.no_avatar),
+                            contentDescription = "Hình ảnh sinh viên",
+                            modifier = Modifier
+                                .size(94.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    when (fetchState) {
+                        is FetchState.Success -> {
+                            val student = (fetchState as FetchState.Success).student
+                            Text(
+                                student.studentName.toString(),
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Color.White,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Text(
+                                "Mã SV: ${student.studentId}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.9f),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        else -> {
+                            Text(
+                                "Thông tin sinh viên",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Color.White,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Nút xem lịch học nổi bật
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                ElevatedButton(
+                    onClick = onViewScheduleClick,
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = secondaryColor,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Xem lịch học",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+
+            // Thông tin khóa học và học kỳ khi có dữ liệu
+            if (fetchState is FetchState.Success) {
+                val student = (fetchState as FetchState.Success).student
+                Divider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    CourseInfoItem(
+                        label = "Niên khoá",
+                        value = "K${student.studentId.take(2)}",
+                        icon = Icons.Filled.Info
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CourseInfoItem(
+    label: String,
+    value: String,
+    icon: ImageVector
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = Color(0xFF1976D2),
+            modifier = Modifier.size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray
+        )
+
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun StudentDetailsSection(student: Student, accentColor: Color) {
     AnimatedVisibility(
         visible = true,
         enter = fadeIn(),
@@ -268,17 +388,20 @@ private fun StudentDetailsSection(student: Student) {
                     InfoItem(
                         icon = Icons.Outlined.Person,
                         label = "Họ và tên",
-                        value = student.studentName?.toString() ?: "Không có thông tin"
+                        value = student.studentName?.toString() ?: "Không có thông tin",
+                        accentColor = accentColor
                     )
                     InfoItem(
                         icon = Icons.Outlined.Person,
                         label = "Ngày sinh",
-                        value = student.birthDate?.toString() ?: "Không có thông tin"
+                        value = student.birthDate?.toString() ?: "Không có thông tin",
+                        accentColor = accentColor
                     )
                     InfoItem(
                         icon = Icons.Outlined.Person,
                         label = "Giới tính",
-                        value = student.sex?.toString() ?: "Không có thông tin"
+                        value = student.sex?.toString() ?: "Không có thông tin",
+                        accentColor = accentColor
                     )
                 }
             )
@@ -292,17 +415,20 @@ private fun StudentDetailsSection(student: Student) {
                     InfoItem(
                         icon = Icons.Outlined.Phone,
                         label = "Điện thoại nhà",
-                        value = student.phone?.toString() ?: "Không có thông tin"
+                        value = student.phone?.toString() ?: "Không có thông tin",
+                        accentColor = accentColor
                     )
                     InfoItem(
                         icon = Icons.Outlined.Phone,
                         label = "Điện thoại cá nhân",
-                        value = student.userPhone?.toString() ?: "Không có thông tin"
+                        value = student.userPhone?.toString() ?: "Không có thông tin",
+                        accentColor = accentColor
                     )
                     InfoItem(
                         icon = Icons.Outlined.Email,
                         label = "Email",
-                        value = student.email?.toString() ?: "Không có thông tin"
+                        value = student.email?.toString() ?: "Không có thông tin",
+                        accentColor = accentColor
                     )
                 }
             )
@@ -316,12 +442,14 @@ private fun StudentDetailsSection(student: Student) {
                     InfoItem(
                         icon = Icons.Outlined.Place,
                         label = "Nơi sinh",
-                        value = student.address?.toString() ?: "Không có thông tin"
+                        value = student.address?.toString() ?: "Không có thông tin",
+                        accentColor = accentColor
                     )
                     InfoItem(
                         icon = Icons.Outlined.Place,
                         label = "Địa chỉ hiện tại",
-                        value = student.detailAddress?.toString() ?: "Không có thông tin"
+                        value = student.detailAddress?.toString() ?: "Không có thông tin",
+                        accentColor = accentColor
                     )
                 }
             )
@@ -347,7 +475,7 @@ private fun EmptyStateSection(onFetchClick: () -> Unit, primaryColor: Color) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            "No student information available yet",
+            "Chưa có thông tin sinh viên",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
@@ -360,15 +488,15 @@ private fun EmptyStateSection(onFetchClick: () -> Unit, primaryColor: Color) {
                 containerColor = primaryColor,
                 contentColor = Color.White
             ),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(8.dp),
             elevation = ButtonDefaults.elevatedButtonElevation(
-                defaultElevation = 6.dp,
-                pressedElevation = 8.dp
+                defaultElevation = 4.dp,
+                pressedElevation = 6.dp
             ),
-            modifier = Modifier.height(56.dp)
+            modifier = Modifier.height(48.dp)
         ) {
             Text(
-                "Fetch Student Info",
+                "Tải thông tin sinh viên",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -379,7 +507,9 @@ private fun EmptyStateSection(onFetchClick: () -> Unit, primaryColor: Color) {
 @Composable
 private fun LoadingStateSection(primaryColor: Color) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -392,7 +522,7 @@ private fun LoadingStateSection(primaryColor: Color) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            "Loading student information...",
+            "Đang tải thông tin...",
             style = MaterialTheme.typography.bodyLarge,
             color = Color.Gray
         )
@@ -402,7 +532,9 @@ private fun LoadingStateSection(primaryColor: Color) {
 @Composable
 private fun ErrorStateSection(message: String, onRetryClick: () -> Unit, primaryColor: Color) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -415,7 +547,7 @@ private fun ErrorStateSection(message: String, onRetryClick: () -> Unit, primary
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            "Something went wrong",
+            "Đã xảy ra lỗi",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = Color.Red.copy(alpha = 0.8f)
@@ -435,14 +567,14 @@ private fun ErrorStateSection(message: String, onRetryClick: () -> Unit, primary
         OutlinedButton(
             onClick = onRetryClick,
             border = ButtonDefaults.outlinedButtonBorder.copy(
-                width = 2.dp,
+                width = 1.5.dp,
                 brush = Brush.horizontalGradient(listOf(primaryColor, primaryColor.copy(alpha = 0.7f)))
             ),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier.height(48.dp)
         ) {
             Text(
-                "Retry",
+                "Thử lại",
                 color = primaryColor,
                 fontWeight = FontWeight.Medium
             )
@@ -450,17 +582,15 @@ private fun ErrorStateSection(message: String, onRetryClick: () -> Unit, primary
     }
 }
 
-
-
 @Composable
 private fun InfoCard(title: String, content: @Composable () -> Unit) {
-    Surface(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        shadowElevation = 4.dp,
-        color = Color.White
+            .padding(vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(
             modifier = Modifier
@@ -471,10 +601,12 @@ private fun InfoCard(title: String, content: @Composable () -> Unit) {
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF5B21B6)
+                color = Color(0xFF1976D2)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+            Divider(color = Color(0xFFEEEEEE))
+            Spacer(modifier = Modifier.height(8.dp))
 
             content()
         }
@@ -482,7 +614,7 @@ private fun InfoCard(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun InfoItem(icon: ImageVector, label: String, value: String) {
+private fun InfoItem(icon: ImageVector, label: String, value: String, accentColor: Color) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -492,11 +624,11 @@ private fun InfoItem(icon: ImageVector, label: String, value: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            tint = Color(0xFF9333EA)
+            modifier = Modifier.size(20.dp),
+            tint = accentColor
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
         Column {
             Text(
@@ -517,10 +649,6 @@ private fun InfoItem(icon: ImageVector, label: String, value: String) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun StudentInfoScreenPreview() {
-    // Gọi hàm StudentInfoScreen với NavHostController giả lập
     val navHostController = NavHostController(LocalContext.current)
     StudentInfoScreen(navHostController)
 }
-
-
-

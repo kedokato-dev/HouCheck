@@ -2,7 +2,9 @@ package com.kedokato_dev.houcheck.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kedokato_dev.houcheck.data.repository.AccountRepository
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
+import com.kedokato_dev.houcheck.database.entity.AccountEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -18,6 +20,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> get() = _loginState
+
 
     fun login(username: String, password: String) {
         if (username.isBlank() || password.isBlank()) {

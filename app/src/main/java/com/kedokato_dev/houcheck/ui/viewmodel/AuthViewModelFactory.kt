@@ -3,6 +3,7 @@ package com.kedokato_dev.houcheck.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
+import com.kedokato_dev.houcheck.database.dao.AccountDAO
 
 class AuthViewModelFactory(private val repository: AuthRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

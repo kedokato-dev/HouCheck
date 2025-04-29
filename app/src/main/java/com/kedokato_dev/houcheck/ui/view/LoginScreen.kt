@@ -1,6 +1,7 @@
 package com.kedokato_dev.houcheck.ui
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,23 +17,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.google.gson.internal.GsonBuildConfig
 import com.kedokato_dev.houcheck.R
+import com.kedokato_dev.houcheck.data.repository.AccountRepository
 import com.kedokato_dev.houcheck.data.repository.AuthRepository
+import com.kedokato_dev.houcheck.database.dao.AccountDAO
+import com.kedokato_dev.houcheck.database.dao.AppDatabase
+import com.kedokato_dev.houcheck.database.entity.AccountEntity
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
+import com.kedokato_dev.houcheck.ui.viewmodel.AccountViewModel
+import com.kedokato_dev.houcheck.ui.viewmodel.AccountViewModelFactory
 import com.kedokato_dev.houcheck.ui.viewmodel.AuthViewModel
 import com.kedokato_dev.houcheck.ui.viewmodel.AuthViewModelFactory
 import com.kedokato_dev.houcheck.ui.viewmodel.LoginState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+
 
 @Composable
 fun LoginScreen(navHostController: NavHostController) {
@@ -41,10 +56,17 @@ fun LoginScreen(navHostController: NavHostController) {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
 
+    val accountDao : AccountDAO = AppDatabase.buildDatabase(context).accountDAO()
+
     val authRepository = remember { AuthRepository(sharedPreferences) }
+    val accountRepository = remember { AccountRepository(accountDao) }
 
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(authRepository)
+    )
+
+    val accountViewModel: AccountViewModel = viewModel(
+        factory = AccountViewModelFactory(accountRepository)
     )
 
     val loginState by authViewModel.loginState.collectAsState()
@@ -58,7 +80,9 @@ fun LoginScreen(navHostController: NavHostController) {
         val shouldRemember = sharedPreferences.getBoolean("remember_login", false)
         if (shouldRemember) {
             val savedUsername = sharedPreferences.getString("saved_username", "") ?: ""
+            val savedPassword = sharedPreferences.getString("password", "") ?: ""
             username = savedUsername
+            password = savedPassword
             rememberLogin = true
         }
     }
@@ -79,7 +103,7 @@ fun LoginScreen(navHostController: NavHostController) {
         ) {
             // Logo and App Name
             Image(
-                painter = painterResource(id = R.drawable._3_mo_ha_noi),
+                painter = painterResource(id = R.drawable.logo_app),
                 contentDescription = "School Logo",
                 modifier = Modifier
                     .size(120.dp)
@@ -95,7 +119,7 @@ fun LoginScreen(navHostController: NavHostController) {
             )
 
             Text(
-                text = "Mở cơ hội học tập cho mọi người",
+                text = "Nhanh chóng - Tiện lợi - Hiệu quả",
                 style = MaterialTheme.typography.titleMedium,
                 color = HNOULightBlue,
                 textAlign = TextAlign.Center,
@@ -209,19 +233,23 @@ fun LoginScreen(navHostController: NavHostController) {
                     // Login Button
                     Button(
                         onClick = {
-                            authViewModel.login(username, password)
                             // Save credentials if remember login is checked
                             if (rememberLogin) {
                                 sharedPreferences.edit()
                                     .putBoolean("remember_login", true)
                                     .putString("saved_username", username)
+                                    .putString("saved_password", password)
                                     .apply()
                             } else {
                                 sharedPreferences.edit()
                                     .putBoolean("remember_login", false)
                                     .remove("saved_username")
+                                    .remove("saved_password")
                                     .apply()
                             }
+
+                            authViewModel.login(username, password)
+
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -248,7 +276,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Version 1.0.0", fontSize = 12.sp, color = Color.Gray)
+                    Text(text = stringResource(R.string.version_app) , fontSize = 12.sp, color = Color.Gray)
                 }
             }
 
@@ -268,9 +296,29 @@ fun LoginScreen(navHostController: NavHostController) {
         LaunchedEffect(loginState) {
             when (loginState) {
                 is LoginState.Success -> {
+                    withContext(Dispatchers.IO) {
+                        // save session prefs
+                        sharedPreferences.edit()
+                            .putString("student_id", username)
+                            .putString("password", password)
+                            .apply()
+
+                        // clear or insert account as needed
+                        val exists = accountViewModel.checkAccountExist(username)
+                        if (!exists) {
+                            AppDatabase.buildDatabase(context).clearAllTables()
+                            accountViewModel.insertAccount(
+                                AccountEntity(0, username, password)
+                            )
+                        }
+                        if (accountViewModel.getAllAccounts() == null) {
+                            accountViewModel.insertAccount(
+                                AccountEntity(0, username, password)
+                            )
+                        }
+                    }
                     navHostController.navigate("home")
                 }
-
                 is LoginState.Error -> {
                     Toast.makeText(
                         context,
@@ -278,9 +326,14 @@ fun LoginScreen(navHostController: NavHostController) {
                         Toast.LENGTH_LONG
                     ).show()
                 }
-
-                else -> {}
+                else -> { }
             }
         }
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun PreviewLoginScreen() {
+    LoginScreen(navHostController = rememberNavController())
 }

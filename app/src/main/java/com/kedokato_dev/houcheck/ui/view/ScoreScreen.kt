@@ -63,7 +63,6 @@ fun ScoreScreen(navHostController: NavHostController) {
 
     LaunchedEffect(Unit) {
         viewModel.fetchScore(authRepository.getSessionId().toString())
-        Log.d("ScoreScreen", "Session ID: ${authRepository.getSessionId()}")
     }
 
     val refreshingState = remember { mutableStateOf(false) }

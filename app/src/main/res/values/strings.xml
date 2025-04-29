@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">HouCheck</string>
+    <string name="app_name">MyHOU</string>
+    <string name="version_app">Version: 1.2.1-rc1</string>
 </resources>
