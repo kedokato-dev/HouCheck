@@ -96,13 +96,22 @@ Mã nguồn của Server có thể tìm thấy tại đây: [SinhVienHOUAPI](htt
 
 ## 🛠️ Công nghệ sử dụng
 
+[![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Android](https://img.shields.io/badge/Android_SDK-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
+[![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![MVVM](https://img.shields.io/badge/MVVM-888888?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/topic/libraries/architecture)
+[![Room](https://img.shields.io/badge/Room-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/training/data-storage/room)
+[![Retrofit](https://img.shields.io/badge/Retrofit-3E4348?style=for-the-badge&logo=square&logoColor=white)](https://square.github.io/retrofit/)
+[![Coil](https://img.shields.io/badge/Coil-E6E6E6?style=for-the-badge&logo=kotlin&logoColor=black)](https://coil-kt.github.io/coil/)
+
 - **Ngôn ngữ**: Kotlin
 - **Framework**: Android SDK
 - **Kiến trúc**: MVVM (Model-View-ViewModel)
+- **UI Components**: Jetpack Compose
 - **Database**: Room
 - **Network**: Retrofit
 - **Image**: Coil
-- **UI Components**: Jetpack Compose
+- 
 ## 📱 Ảnh chụp màn hình
 
 ### Giao diện chính
