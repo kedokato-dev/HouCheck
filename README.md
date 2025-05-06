@@ -1,8 +1,9 @@
 # MyHOU
 
 <p align="center">
-  <img src="https://cdn-img.upanhlaylink.com/img/image_2025050625f21638e887e6c51dc12d3f00294166.jpg" alt="MyHOU" width="120"/>
+  <img src="https://cdn-img.upanhlaylink.com/img/image_20250506bd849f0af16151ee2d59fc69a2064438.jpg" alt="MyHOU" width="120"/>
 </p>
+
 
 ## 📱 Giới thiệu
 
