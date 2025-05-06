@@ -21,6 +21,7 @@ val accentColor = Color(0xFF4CAF50) // Xanh lá
 val error = Color(0xFFF44336) // Đỏ
 val makeUp = Color(0xFF673AB7) // Xám
 
+val yellow = Color(0xFFF5DE40) // Vàng
 
 
 val HNOUBlue = Color(0xFF479AFF)        // Màu xanh đại học (màu chính - primary)

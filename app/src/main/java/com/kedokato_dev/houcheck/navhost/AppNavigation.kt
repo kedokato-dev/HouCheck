@@ -1,5 +1,7 @@
 package com.kedokato_dev.houcheck.navhost
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +27,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.kedokato_dev.houcheck.ui.LoginScreen
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.view.ExamScheduleScreen
+import com.kedokato_dev.houcheck.ui.view.FeedbackScreen
 import com.kedokato_dev.houcheck.ui.view.HomeScreen
 import com.kedokato_dev.houcheck.ui.view.ListScoreScreen
 import com.kedokato_dev.houcheck.ui.view.ScheduleScreen
@@ -34,6 +37,7 @@ import com.kedokato_dev.houcheck.ui.view.SplashScreen
 import com.kedokato_dev.houcheck.ui.view.StudentInfoScreen
 import com.kedokato_dev.houcheck.ui.view.TrainingScoreScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(navController: NavHostController) {
     // Start with the initial state explicitly set to false
@@ -48,7 +52,7 @@ fun AppNavigation(navController: NavHostController) {
     // Determine bottom bar visibility directly
     val bottomBarVisible = currentRoute !in listOf(
         "training_score", "login", "studentInfo", "score", "list_score", "splash",
-        "exam_schedule", "week_schedule"
+        "exam_schedule", "week_schedule", "feedback"
     ) && appFullyStarted.value
 
     Scaffold(
@@ -107,6 +111,11 @@ fun AppNavigation(navController: NavHostController) {
                             popUpTo("splash") { inclusive = true }
                         }
                     }
+                }
+                composable("feedback") {
+                    // When reaching feedback screen, app is considered fully started
+                    appFullyStarted.value = true
+                    FeedbackScreen(navController)
                 }
             }
         }

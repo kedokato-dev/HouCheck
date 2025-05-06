@@ -66,7 +66,8 @@ fun SettingScreen(navHostController: NavHostController) {
         ) {
             val settings = listOf(
                 SettingItem("Đăng xuất", icon = painterResource(id = R.drawable.logout)  ),
-                SettingItem("Dark Mode", icon = painterResource(id = R.drawable.dark_mode)  )
+                SettingItem("Dark Mode", icon = painterResource(id = R.drawable.dark_mode)  ),
+                SettingItem("Gửi ý kiến cải thiện app", icon = painterResource(id = R.drawable.feedback)  )
             )
 
             settings.forEach { item ->
@@ -83,6 +84,10 @@ fun SettingScreen(navHostController: NavHostController) {
                         }
                         "Dark Mode" -> {
                             Toast.makeText(context, "Chưa có chức năng này", Toast.LENGTH_SHORT).show()
+                        }
+
+                        "Gửi ý kiến cải thiện app" -> {
+                            navHostController.navigate("feedback")
                         }
                     }
 
