@@ -94,13 +94,13 @@ fun GradeDistributionSection(listScoreResult: List<CourseResultEntity>) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Phân bố điểm chữ",
+                    text = "Thống kê điểm chữ môn học",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 
                 Text(
-                    text = "Chưa có dữ liệu về điểm chữ các môn học",
+                    text = "Chưa có dữ liệu về điểm chữ của các môn học",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
@@ -121,7 +121,7 @@ fun GradeDistributionSection(listScoreResult: List<CourseResultEntity>) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Phân bố điểm chữ",
+                text = "Thống kê điểm chữ môn học",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )

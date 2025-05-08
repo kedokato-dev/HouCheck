@@ -1,6 +1,7 @@
 package com.kedokato_dev.houcheck.ui.view.training_score
 
 import android.content.Context
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,10 +45,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,7 +67,12 @@ import com.kedokato_dev.houcheck.network.model.TrainingScore
 import com.kedokato_dev.houcheck.repository.AuthRepository
 import com.kedokato_dev.houcheck.repository.TrainingScoreRepository
 import com.kedokato_dev.houcheck.local.dao.AppDatabase
+import com.kedokato_dev.houcheck.ui.components.EmptyStateComponent
+import com.kedokato_dev.houcheck.ui.components.ErrorComponent
+import com.kedokato_dev.houcheck.ui.components.LoadingComponent
+import com.kedokato_dev.houcheck.ui.components.chart.ScoreBarChart
 import com.kedokato_dev.houcheck.ui.theme.HNOUGradientColors
+import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -157,63 +169,109 @@ fun TrainingScoreScreen(navController: NavHostController) {
         ) {
             when (fetchState) {
                 is FetchTrainingScoreState.Idle -> {
-                    EmptyStateSection(
-                        onFetchClick = {
+
+                    EmptyStateComponent(
+                        title = "Chưa có dữ liệu điểm rèn luyện",
+                        buttonText = "Tải dữ liệu",
+                        onButtonClick = {
                             viewModel.fetchTrainingScore(
                                 authRepository.getSessionId().toString()
                             )
-                        },
-                        gradientColors = HNOUGradientColors
+                        }
                     )
                 }
 
                 is FetchTrainingScoreState.Loading -> {
-                    LoadingStateSection(primaryColor = primaryColor)
+                    LoadingComponent(HNOULightBlue, "Đang tải dữ liệu điểm rèn luyện...")
                 }
 
                 is FetchTrainingScoreState.Success -> {
                     val scores = (fetchState as FetchTrainingScoreState.Success).scores
 
-                    Column(
+
+// Sắp xếp scores theo thời gian (học kỳ/năm học) - Năm học mới nhất hiển thị trước
+                    val sortedScores = scores.sortedByDescending {
+                        "${it.academicYear}_${it.semester}"
+                    }
+                    // Sắp xếp scores theo thời gian (học kỳ/năm học) - Năm học cũ nhất hiển thị trước
+                    val sortedScoresAscending = scores.sortedBy {
+                        "${it.academicYear}_${it.semester}"
+                    }
+
+
+
+                    LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 16.dp)
+//                            .padding(paddingValues)
+                            .padding(horizontal = 16.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
-                        // Hiển thị tổng quan điểm rèn luyện
-                        val latestScore = scores.firstOrNull()
-                        latestScore?.let { score ->
-                            ScoreSummary(score = score)
+
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(260.dp), // Tăng chiều cao thêm một chút
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 4.dp
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = "Biểu đồ điểm rèn luyện",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = Color(0xFF333333)
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Biểu đồ cột
+                                    ScoreBarChart(
+                                        scores = sortedScoresAscending,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(200.dp) // Tăng chiều cao
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Danh sách lịch sử điểm rèn luyện
+                            Text(
+                                text = "Lịch sử điểm rèn luyện",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF333333),
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Danh sách lịch sử điểm rèn luyện
-                        Text(
-                            text = "Lịch sử điểm rèn luyện",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF333333),
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp)
-                        ) {
-                            items(scores) { score ->
-                                TrainingScoreCard(
-                                    score = score,
-                                    getRankColor = { rank ->
-                                        when (rank) {
-                                            "Xuất sắc" -> excellentColor
-                                            "Tốt" -> goodColor
-                                            "Khá" -> averageColor
-                                            "Trung bình" -> belowAverageColor
-                                            else -> poorColor
-                                        }
+                        items(sortedScores) { score ->
+                            TrainingScoreCard(
+                                score = score,
+                                getRankColor = { rank ->
+                                    when (rank) {
+                                        "Xuất sắc" -> excellentColor
+                                        "Tốt" -> goodColor
+                                        "Khá" -> averageColor
+                                        "Trung bình" -> belowAverageColor
+                                        else -> poorColor
                                     }
-                                )
-                            }
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                 }
@@ -234,133 +292,8 @@ fun TrainingScoreScreen(navController: NavHostController) {
     }
 }
 
-@Composable
-private fun ScoreSummary(score: TrainingScore) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Học kỳ hiện tại",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = "HK${score.semester} (${score.academicYear})",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
 
-                // Hiển thị điểm rèn luyện dạng biểu tượng
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    Color(0xFF03A9F4),
-                                    Color(0xFF0288D1)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = score.totalScore.toString().dropLast(3),
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
-                        )
-                        Text(
-                            text = "điểm",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Thêm Divider để phân tách
-            Divider(color = Color(0xFFEEEEEE))
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Hiển thị xếp loại
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        Icons.Outlined.Info,
-                        contentDescription = null,
-                        tint = Color(0xFF03A9F4),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Xếp loại",
-                        fontSize = 16.sp,
-                        color = Color(0xFF555555)
-                    )
-                }
-
-                // Hiển thị xếp loại với màu tương ứng
-                val (backgroundColor, textColor) = when (score.rank) {
-                    "Xuất sắc" -> Pair(Color(0xFFE8F5E9), Color(0xFF4CAF50))
-                    "Tốt" -> Pair(Color(0xFFF1F8E9), Color(0xFF8BC34A))
-                    "Khá" -> Pair(Color(0xFFFFF8E1), Color(0xFFFFC107))
-                    "Trung bình" -> Pair(Color(0xFFFFF3E0), Color(0xFFFF9800))
-                    else -> Pair(Color(0xFFFFEBEE), Color(0xFFF44336))
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(backgroundColor)
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = score.rank,
-                        color = textColor,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun TrainingScoreCard(score: TrainingScore, getRankColor: (String) -> Color) {
@@ -433,83 +366,6 @@ private fun TrainingScoreCard(score: TrainingScore, getRankColor: (String) -> Co
     }
 }
 
-@Composable
-private fun EmptyStateSection(onFetchClick: () -> Unit, gradientColors: List<Color>) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Info,
-            contentDescription = null,
-            tint = Color(0xFF03A9F4),
-            modifier = Modifier.size(72.dp)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            "Chưa có dữ liệu điểm rèn luyện",
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Medium
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            "Hãy tải dữ liệu để xem điểm rèn luyện của bạn",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            color = Color.Gray
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = onFetchClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = gradientColors[0]
-            )
-        ) {
-            Text(
-                "Tải dữ liệu",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
-
-@Composable
-private fun LoadingStateSection(primaryColor: Color) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        CircularProgressIndicator(
-            color = primaryColor,
-            strokeWidth = 4.dp,
-            modifier = Modifier.size(48.dp)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            "Đang tải dữ liệu điểm rèn luyện...",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.Gray
-        )
-    }
-}
 
 @Composable
 private fun ErrorStateSection(message: String, onRetryClick: () -> Unit, primaryColor: Color) {
