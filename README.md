@@ -104,6 +104,7 @@ Mã nguồn của Server có thể tìm thấy tại đây: [SinhVienHOUAPI](htt
 [![Room](https://img.shields.io/badge/Room-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/training/data-storage/room)
 [![Retrofit](https://img.shields.io/badge/Retrofit-3E4348?style=for-the-badge&logo=square&logoColor=white)](https://square.github.io/retrofit/)
 [![Coil](https://img.shields.io/badge/Coil-E6E6E6?style=for-the-badge&logo=kotlin&logoColor=black)](https://coil-kt.github.io/coil/)
+[![MpAndroidChart](https://img.shields.io/badge/MPAndroidChart-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/PhilJay/MPAndroidChart)
 
 - **Ngôn ngữ**: Kotlin
 - **Framework**: Android SDK
@@ -112,7 +113,7 @@ Mã nguồn của Server có thể tìm thấy tại đây: [SinhVienHOUAPI](htt
 - **Database**: Room
 - **Network**: Retrofit
 - **Image**: Coil
-- 
+- **Chart**: MpAndroidChart 
 ## 📱 Ảnh chụp màn hình
 
 ### Giao diện chính
