@@ -1,11 +1,10 @@
 package com.kedokato_dev.houcheck.ui.view.feedback
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kedokato_dev.houcheck.local.dao.FeedbackDAO
 import com.kedokato_dev.houcheck.local.entity.FeedbackEntity
 import com.kedokato_dev.houcheck.network.model.Feedback
 import com.kedokato_dev.houcheck.repository.FeedBackRepository
@@ -22,8 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FetchFeedbackViewModel @Inject constructor(
-    private val repository: FeedBackRepository,
-    private val feedbackDao: FeedbackDAO,
+    private val repository: FeedBackRepository
 ) : ViewModel() {
 
     private val _feedbackState = MutableStateFlow<UiState<List<Feedback>>>(UiState.Idle)
@@ -42,7 +40,7 @@ class FetchFeedbackViewModel @Inject constructor(
         _feedbackState.value = UiState.Loading
 
         viewModelScope.launch {
-            feedbackDao.getFeedbackByEmail(email).collect { feedbackEntities ->
+            repository.getFeedbackByEmailLocal(email).collect { feedbackEntities ->
                 if (feedbackEntities.isNotEmpty()) {
                     _feedbackState.value = UiState.Success(feedbackEntities.map { localFeedback ->
                         Feedback(
@@ -73,7 +71,12 @@ class FetchFeedbackViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val (success, responseMessage, id) = repository.postFeedback(name, email, message, currentTime)
+                val (success, responseMessage, id) = repository.postFeedback(
+                    name,
+                    email,
+                    message,
+                    currentTime
+                )
                 if (success) {
                     _operationState.value = UiState.Success("Feedback sent successfully")
 
@@ -89,13 +92,63 @@ class FetchFeedbackViewModel @Inject constructor(
                                 createdAt = networkFeedback.createdAt
                             )
                         }
-                        feedbackDao.insertFeedback(feedbackEntities)
+                        repository.insertFeedbackLocal(feedbackEntities)
                     }
                 } else {
                     _operationState.value = UiState.Error(responseMessage)
                 }
             } catch (e: Exception) {
                 _operationState.value = UiState.Error(e.message ?: "Failed to send feedback")
+            }
+        }
+    }
+
+    // update feedback có sử dụng flow để theo dõi sự thay đổi
+    @SuppressLint("SuspiciousIndentation")
+    fun updateFeedback(feedBack: FeedbackEntity) {
+        if (feedBack.message.isBlank()) {
+            _operationState.value = UiState.Error("Nội dung phản hồi không được để trống")
+            return
+        }
+        _operationState.value = UiState.Loading
+        viewModelScope.launch {
+            try {
+                val success = repository.updateFeedback(feedBack.id, feedBack.message)
+                if (success) {
+                    _operationState.value = UiState.Success("Chỉnh sửa phản hồi thành công")
+                    withContext(Dispatchers.IO) {
+                        repository.updateFeedbackLocal(feedBack)
+                    }
+                } else {
+                    _operationState.value = UiState.Error("Chỉnh sửa phản hồi thất bại")
+                }
+            } catch (e: Exception) {
+                _operationState.value = UiState.Error(e.message ?: "Chỉnh sửa phản hồi thất bại")
+            }
+        }
+    }
+
+    fun deleteFeedback(feedbackId: String) {
+        if (feedbackId.isBlank()) {
+            _operationState.value = UiState.Error("Feedback ID không hợp lệ")
+            return
+        }
+
+        _operationState.value = UiState.Loading
+
+        viewModelScope.launch {
+            try {
+                val success = repository.deleteFeedback(feedbackId)
+                if (success) {
+                    _operationState.value = UiState.Success("Xóa phản hồi thành công")
+                    withContext(Dispatchers.IO) {
+                        repository.deleteFeedbackByIdLocal(feedbackId)
+                    }
+                } else {
+                    _operationState.value = UiState.Error("Xóa phản hồi thất bại")
+                }
+            } catch (e: Exception) {
+                _operationState.value = UiState.Error(e.message ?: "Xóa phản hồi thất bại")
             }
         }
     }

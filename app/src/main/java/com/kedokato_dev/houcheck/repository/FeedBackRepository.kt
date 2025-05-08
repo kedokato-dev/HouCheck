@@ -1,6 +1,7 @@
 package com.kedokato_dev.houcheck.repository
 
 import com.kedokato_dev.houcheck.local.dao.FeedbackDAO
+import com.kedokato_dev.houcheck.local.entity.FeedbackEntity
 import com.kedokato_dev.houcheck.network.api.ApiClient
 import com.kedokato_dev.houcheck.network.api.FeedbackService
 import com.kedokato_dev.houcheck.network.model.Feedback
@@ -11,7 +12,7 @@ import kotlinx.coroutines.withContext
 
 class FeedBackRepository(
     private val api: FeedbackService = ApiClient.instance.create(FeedbackService::class.java),
-//    private val feedBackDAO: FeedbackDAO
+    private val feedBackDAO: FeedbackDAO
 ) {
 
     suspend fun getFeedbackByEmail(email: String): List<Feedback> = withContext(Dispatchers.IO) {
@@ -29,7 +30,6 @@ class FeedBackRepository(
     }
 
 
-
     suspend fun postFeedback(
         name: String,
         email: String,
@@ -38,7 +38,7 @@ class FeedBackRepository(
     ): Triple<Boolean, String, String> = withContext(Dispatchers.IO) {
         val response = api.sendFeedback(
             FeedbackRequest(
-               name = name,
+                name = name,
                 email = email,
                 message = message,
                 createdAt = createdAt
@@ -47,7 +47,11 @@ class FeedBackRepository(
         if (response.isSuccessful) {
             val feedbackResponse = response.body()
             if (feedbackResponse != null) {
-                return@withContext Triple(feedbackResponse.success, feedbackResponse.message, feedbackResponse.id)
+                return@withContext Triple(
+                    feedbackResponse.success,
+                    feedbackResponse.message,
+                    feedbackResponse.id
+                )
             } else {
                 throw Exception("No feedback data available")
             }
@@ -78,9 +82,11 @@ class FeedBackRepository(
         }
     }
 
+
+
     suspend fun deleteFeedback(
         id: String
-    ): Boolean  = withContext(Dispatchers.IO){
+    ): Boolean = withContext(Dispatchers.IO) {
         val response = api.deleteFeedback(id)
         if (response.isSuccessful) {
             val feedbackResponse = response.body()
@@ -91,6 +97,39 @@ class FeedBackRepository(
             }
         } else {
             throw Exception("Failed to delete feedback: ${response.errorBody()}")
+        }
+    }
+
+
+    fun getFeedbackByEmailLocal(email: String) = feedBackDAO.getFeedbackByEmail(email)
+
+    suspend fun insertFeedbackLocal(feedback: List<FeedbackEntity>) = withContext(Dispatchers.IO) {
+        try {
+            feedBackDAO.insertFeedback(feedback)
+        } catch (e: Exception) {
+            throw Exception("Failed to insert feedback: ${e.message}")
+        }
+    }
+
+
+    suspend fun updateFeedbackLocal(feedback: FeedbackEntity) = withContext(Dispatchers.IO) {
+        try {
+            val result = feedBackDAO.updateFeedback(feedback)
+            if (result > 0)
+                return@withContext true
+            else {
+                return@withContext false
+            }
+        } catch (e: Exception) {
+            return@withContext false
+        }
+    }
+
+    suspend fun deleteFeedbackByIdLocal(id: String) = withContext(Dispatchers.IO) {
+        try {
+            feedBackDAO.deleteFeedbackById(id)
+        } catch (e: Exception) {
+            throw Exception("Failed to delete all feedback: ${e.message}")
         }
     }
 

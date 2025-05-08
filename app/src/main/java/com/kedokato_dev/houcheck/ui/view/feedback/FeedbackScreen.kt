@@ -1,5 +1,6 @@
 package com.kedokato_dev.houcheck.ui.view.feedback
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -17,32 +18,30 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,6 +52,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -61,33 +61,39 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.local.dao.AppDatabase
+import com.kedokato_dev.houcheck.local.entity.FeedbackEntity
 import com.kedokato_dev.houcheck.network.model.Feedback
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.state.UiState
+import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import kotlinx.coroutines.launch
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedbackScreen(navController: NavHostController) {
     val context = LocalContext.current
-
     val db = AppDatabase(context)
-
     val viewModel: FetchFeedbackViewModel = hiltViewModel()
     val feedbackState by viewModel.feedbackState.collectAsState()
     val operationState by viewModel.operationState.collectAsState()
 
-
     var email by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
-    var isEditing by remember { mutableStateOf(false) }
     var selectedFeedback by remember { mutableStateOf<Feedback?>(null) }
+    var isEditing by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    // Function to reset edit state
+    fun resetEditState() {
+        isEditing = false
+        selectedFeedback = null
+        message = ""
+    }
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
@@ -95,7 +101,6 @@ fun FeedbackScreen(navController: NavHostController) {
             if (student != null) {
                 name = student.studentName ?: ""
                 email = student.email ?: ""
-                // Fetch feedback history once we have the email
                 if (email.isNotEmpty()) {
                     viewModel.observeFeedbackByEmail(email)
                 }
@@ -103,25 +108,20 @@ fun FeedbackScreen(navController: NavHostController) {
         }
     }
 
-
-
-
-
     LaunchedEffect(operationState) {
         when (operationState) {
             is UiState.Success -> {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar((operationState as UiState.Success<String>).data)
-//                    viewModel.resetOperationState()
                     if (email.isNotEmpty()) {
                         viewModel.observeFeedbackByEmail(email)
+                        resetEditState()
                     }
                 }
             }
             is UiState.Error -> {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar((operationState as UiState.Error).message)
-//                    viewModel.resetOperationState()
                 }
             }
             else -> {}
@@ -131,7 +131,12 @@ fun FeedbackScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Feedback") },
+                title = { Text("Phản hồi") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = HNOUDarkBlue,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                ),
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -148,261 +153,255 @@ fun FeedbackScreen(navController: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { },
-                enabled = false,
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { },
-                label = { Text("Email") },
-                enabled = false,
-                modifier = Modifier.fillMaxWidth()
-            )
-
+            if (isEditing) {
+                Text(
+                    text = "Chỉnh sửa phản hồi",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = HNOUDarkBlue
+                )
+            }
+            
             OutlinedTextField(
                 value = message,
                 onValueChange = { message = it },
-                label = { Text(if (isEditing) "Update Message" else "Message") },
+                label = { Text(if (isEditing) "Nội dung chỉnh sửa" else "Thông tin phản hồi") },
+                placeholder = { Text("Nhập thông tin phản hồi") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(120.dp),
+                enabled = true
             )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = if (isEditing) Arrangement.SpaceBetween else Arrangement.Center
             ) {
-                Button(
-                    onClick = {
-                        if (isEditing) {
-//                            viewModel.updateFeedback(message)
-                            isEditing = false
-                            message = ""
-                        } else {
-                            viewModel.sendFeedback(name, email, message)
-                            message = ""
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        if (isEditing) Icons.Default.Edit else Icons.Default.Send,
-                        contentDescription = if (isEditing) "Cập nhật" else "Gửi"
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (isEditing) "Cập nhật" else "Gửi ý kiến")
-                }
-
                 if (isEditing) {
                     Button(
+                        onClick = { resetEditState() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Gray,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Hủy")
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Button(
                         onClick = {
-//                            viewModel.deleteFeedback()
-                            isEditing = false
-                            message = ""
+                            selectedFeedback?.let {
+                                val feedbackEntity = FeedbackEntity(
+                                    id = it.id,
+                                    name = it.name,
+                                    email = it.email,
+                                    message = message,
+                                    createdAt = it.createdAt
+                                )
+                                viewModel.updateFeedback(feedbackEntity)
+                            }
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
+                            containerColor = HNOULightBlue,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
-                        Icon(Icons.Default.Delete, contentDescription = "Xóa")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Xóa")
+                        Text("Cập nhật")
                     }
                 } else {
-                    OutlinedButton(
+                    Button(
                         onClick = {
-                            if (email.isNotEmpty()) {
-                                viewModel.observeFeedbackByEmail(email)
+                            if (message.isNotBlank()) {
+                                viewModel.sendFeedback(name, email, message)
+                                message = ""
+                            } else {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Vui lòng nhập thông tin phản hồi")
+                                }
                             }
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = HNOULightBlue,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     ) {
-                        Text("Xen lịch sử")
+                        Text("Gửi phản hồi")
                     }
                 }
             }
 
-            // Cancel editing button
-            if (isEditing) {
-                TextButton(
-                    onClick = {
-                        isEditing = false
-                        message = ""
-                        selectedFeedback = null
-                    },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text("Cancel Editing")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            when (feedbackState) {
-                is UiState.Loading -> {
-                  Box(
-                        modifier = Modifier.fillMaxSize(),
+            if (feedbackState is UiState.Loading) {
+                LoadingComponent(HNOULightBlue, "Đang tải phản hồi", "Vui lòng chờ trong giây lát")
+            } else if (feedbackState is UiState.Success) {
+                val feedbackList = (feedbackState as UiState.Success<List<Feedback>>).data
+                if (feedbackList.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                      LoadingComponent(HNOULightBlue, "Đang tải lịch sử gửi ý kiến")
-                    }
-
-                }
-                is UiState.Success -> {
-                    val feedbacks = (feedbackState as UiState.Success<List<Feedback>>).data
-                    if (feedbacks.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            Text("No feedback found")
-                        }
-                    } else {
                         Text(
-                            "Lịch sử gửi ý kiến",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            items(feedbacks) { feedback ->
-                                FeedbackItem(
-                                    feedback = feedback,
-                                    onClick = {
-                                        selectedFeedback = feedback
-//                                        viewModel.setCurrentFeedback(feedback.id)
-                                        isEditing = true
-                                        message = feedback.message
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-                is UiState.Error -> {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text(
-                            (feedbackState as UiState.Error).message,
-                            color = MaterialTheme.colorScheme.error
+                            text = "Chưa có phản hồi nào",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            color = Color.Gray
                         )
                     }
+                } else {
+                    Text(
+                        text = "Lịch sử phản hồi",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = HNOUDarkBlue
+                    )
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(feedbackList) { feedback ->
+                            FeedbackItem(
+                                feedback = feedback,
+                                onClick = {},
+                                modifier = Modifier.fillMaxWidth(),
+                                onDelete = {
+                                    viewModel.deleteFeedback(feedback.id)
+                                },
+                                onUpdate = {
+                                    selectedFeedback = feedback
+                                    message = feedback.message
+                                    isEditing = true
+                                }
+                            )
+                        }
+                    }
                 }
-                else -> { /* Idle state - no content to show */ }
+            } else if (feedbackState is UiState.Error) {
+                Text(
+                    text = (feedbackState as UiState.Error).message,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
 }
+
 @Composable
 fun FeedbackItem(
     feedback: Feedback,
     onClick: () -> Unit,
+    onDelete: (Feedback) -> Unit,
+    onUpdate: (Feedback) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showDropdownMenu by remember { mutableStateOf(false) }
+    
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(8.dp), // Increased padding for better spacing
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp), // Increased elevation for more depth
-        shape = RoundedCornerShape(12.dp), // More rounded corners
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface, // Explicit background color
-        )
+            .wrapContentHeight()
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Optional badge for feedback type/status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = "Bài đánh giá", // Assuming there's a type field
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
-            // Main message with enhanced styling
-            Text(
-                text = feedback.message,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = HNOULightBlue
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Avatar and name
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = CircleShape,
-                        color = HNOULightBlue,
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Text(
-                            text = feedback.name.firstOrNull()?.toString() ?: "?",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            style = MaterialTheme.typography.labelMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)
+                Text(
+                    text = feedback.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                Box {
+                    IconButton(onClick = { showDropdownMenu = true }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "More options",
+                            tint = Color.Gray
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = feedback.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                    
+                    DropdownMenu(
+                        expanded = showDropdownMenu,
+                        onDismissRequest = { showDropdownMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Chỉnh sửa") },
+                            leadingIcon = { 
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Edit",
+                                    tint = HNOULightBlue
+                                )
+                            },
+                            onClick = {
+                                onUpdate(feedback)
+                                showDropdownMenu = false
+                            }
+                        )
 
-                // Date with icon
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = "Date",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = feedback.createdAt, // A function to format the date nicely
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                        DropdownMenuItem(
+                            text = { Text("Xóa") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete",
+                                    tint = Color.Red
+                                )
+                            },
+                            onClick = {
+                                onDelete(feedback)
+                                showDropdownMenu = false
+                            }
+                        )
+                    }
                 }
             }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.DateRange,
+                    contentDescription = "Date",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.Gray
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = feedback.createdAt,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = feedback.message,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
+
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, showSystemUi = true)
@@ -415,11 +414,11 @@ fun FeedbackPreView(){
         message = "This is a feedback message.",
         createdAt = "2023-10-01",)
 
-//    FeedbackScreen(navController = NavHostController(LocalContext.current))
-
     FeedbackItem(
         feedback = feedback,
-        onClick = {}
+        onClick = {},
+        onDelete = {},
+        onUpdate = {},
     )
 }
 

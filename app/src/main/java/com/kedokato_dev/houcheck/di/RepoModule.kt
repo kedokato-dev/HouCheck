@@ -1,5 +1,6 @@
 package com.kedokato_dev.houcheck.di
 
+import com.kedokato_dev.houcheck.local.dao.FeedbackDAO
 import com.kedokato_dev.houcheck.network.api.FeedbackService
 import com.kedokato_dev.houcheck.repository.FeedBackRepository
 import dagger.Module
@@ -13,7 +14,7 @@ import dagger.hilt.components.SingletonComponent
 object RepoModule {
 
     @Provides
-    fun provideFeedBackRepo(api: FeedbackService): FeedBackRepository {
-        return FeedBackRepository(api)
+    fun provideFeedBackRepo(api: FeedbackService, dao: FeedbackDAO): FeedBackRepository {
+        return FeedBackRepository(api, dao)
     }
 }
