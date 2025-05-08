@@ -3,7 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
-
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -43,8 +44,6 @@ android {
 
 dependencies {
 
-    implementation ("androidx.compose.material3:material3:1.2.0-alpha03")
-
     // Navigation
     implementation(libs.navigation.compose)
 
@@ -71,6 +70,16 @@ dependencies {
     // coil
     implementation(libs.coil.core)
     implementation(libs.coil.compose)
+
+
+    // hilt
+    implementation(libs.hilt)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+
+    // mpandroidchart
+    implementation(libs.mpandroidchart)
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

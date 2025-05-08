@@ -26,16 +26,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.kedokato_dev.houcheck.ui.LoginScreen
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
-import com.kedokato_dev.houcheck.ui.view.ExamScheduleScreen
-import com.kedokato_dev.houcheck.ui.view.FeedbackScreen
-import com.kedokato_dev.houcheck.ui.view.HomeScreen
-import com.kedokato_dev.houcheck.ui.view.ListScoreScreen
-import com.kedokato_dev.houcheck.ui.view.ScheduleScreen
-import com.kedokato_dev.houcheck.ui.view.ScoreScreen
-import com.kedokato_dev.houcheck.ui.view.SettingScreen
-import com.kedokato_dev.houcheck.ui.view.SplashScreen
-import com.kedokato_dev.houcheck.ui.view.StudentInfoScreen
-import com.kedokato_dev.houcheck.ui.view.TrainingScoreScreen
+import com.kedokato_dev.houcheck.ui.view.exam_schedule.ExamScheduleScreen
+import com.kedokato_dev.houcheck.ui.view.feedback.FeedbackScreen
+import com.kedokato_dev.houcheck.ui.view.home.HomeScreen
+import com.kedokato_dev.houcheck.ui.view.score_list.ListScoreScreen
+import com.kedokato_dev.houcheck.ui.view.week_schedule.ScheduleScreen
+import com.kedokato_dev.houcheck.ui.view.score.ScoreScreen
+import com.kedokato_dev.houcheck.ui.view.settings.SettingScreen
+import com.kedokato_dev.houcheck.ui.view.splash.SplashScreen
+import com.kedokato_dev.houcheck.ui.view.profile.StudentInfoScreen
+import com.kedokato_dev.houcheck.ui.view.training_score.TrainingScoreScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
