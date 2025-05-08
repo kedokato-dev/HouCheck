@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -42,19 +41,27 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kedokato_dev.houcheck.local.dao.AppDatabase
+import com.kedokato_dev.houcheck.local.entity.CourseResultEntity
 import com.kedokato_dev.houcheck.network.api.ApiClient
+import com.kedokato_dev.houcheck.network.api.ListScoreService
 import com.kedokato_dev.houcheck.network.api.ScoreService
+import com.kedokato_dev.houcheck.network.model.CourseResult
 import com.kedokato_dev.houcheck.network.model.Score
 import com.kedokato_dev.houcheck.repository.AuthRepository
+import com.kedokato_dev.houcheck.repository.ListScoreRepository
 import com.kedokato_dev.houcheck.repository.ScoreRepository
 import com.kedokato_dev.houcheck.ui.components.EmptyStateComponent
 import com.kedokato_dev.houcheck.ui.components.ErrorComponent
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
+import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 import com.kedokato_dev.houcheck.ui.view.score.components.chart.AcademicStatusSection
 import com.kedokato_dev.houcheck.ui.view.score.components.chart.GPASummarySection
+import com.kedokato_dev.houcheck.ui.view.score.components.chart.GradeDistributionSection
 import com.kedokato_dev.houcheck.ui.view.score.components.chart.ProgressSection
+import com.kedokato_dev.houcheck.ui.view.score_list.ListScoreViewModel
+import com.kedokato_dev.houcheck.ui.view.score_list.ListScoreViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +70,24 @@ fun ScoreScreen(navHostController: NavHostController) {
     val sharedPreferences = remember {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
+
+    val listScoreApi = remember { ApiClient.instance.create(ListScoreService::class.java) }
+    val courseResultDAO = AppDatabase.buildDatabase(context).courseResultDAO()
+    val listScoreRepository = remember {
+        ListScoreRepository(
+            listScoreApi, courseResultDAO
+        )
+    }
+
+    val listScoreViewModel: ListScoreViewModel = viewModel(
+        factory = ListScoreViewModelFactory(listScoreRepository)
+    )
+
+    val db = AppDatabase.buildDatabase(context)
+
+
+    // Lấy dữ liệu điểm từ ViewModel
+    val listScoreState by listScoreViewModel.state.collectAsState()
 
     val api = remember { ApiClient.instance.create(ScoreService::class.java) }
     val dao = AppDatabase.buildDatabase(context).scoreDAO()
@@ -83,6 +108,7 @@ fun ScoreScreen(navHostController: NavHostController) {
 
     LaunchedEffect(Unit) {
         viewModel.fetchScore(authRepository.getSessionId().toString())
+        listScoreViewModel.fetchListScore(authRepository.getSessionId().toString())
     }
 
     Scaffold(
@@ -151,7 +177,26 @@ fun ScoreScreen(navHostController: NavHostController) {
 
                 is FetchScoreState.Success -> {
                     val score = (fetchState as FetchScoreState.Success).scores
-                    ScoreContentRedesigned(score, navHostController)
+                    val courseList = when (listScoreState) {
+                        is UiState.Success -> (listScoreState as UiState.Success<List<CourseResult>>).data
+                            .map { courseResult ->
+                                CourseResultEntity(
+                                    semester = courseResult.semester,
+                                    academicYear = courseResult.academicYear,
+                                    courseCode = courseResult.courseCode,
+                                    courseName = courseResult.courseName,
+                                    credits = courseResult.credits,
+                                    score10 = courseResult.score10,
+                                    score4 = courseResult.score4,
+                                    letterGrade = courseResult.letterGrade,
+                                    notCounted = courseResult.notCounted,
+                                    note = courseResult.note,
+                                    detailLink = courseResult.detailLink
+                                )
+                            }
+                        else -> emptyList()
+                    }
+                    ScoreContentRedesigned(score, navHostController, courseList)
                 }
 
                 is FetchScoreState.Error -> {
@@ -176,7 +221,7 @@ fun ScoreScreen(navHostController: NavHostController) {
 }
 
 @Composable
-fun ScoreContentRedesigned(score: Score, navHostController: NavHostController) {
+fun ScoreContentRedesigned(score: Score, navHostController: NavHostController, listScore: List<CourseResultEntity>) {
     val scrollState = rememberScrollState()
 
     Column(
@@ -191,6 +236,10 @@ fun ScoreContentRedesigned(score: Score, navHostController: NavHostController) {
 
         // Academic Status Section
         AcademicStatusSection(score)
+
+        GradeDistributionSection(
+            listScore
+        )
 
         // Progress Section
         ProgressSection(score)
