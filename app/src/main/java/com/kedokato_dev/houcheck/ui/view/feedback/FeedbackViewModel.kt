@@ -2,21 +2,29 @@ package com.kedokato_dev.houcheck.ui.view.feedback
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.kedokato_dev.houcheck.local.dao.FeedbackDAO
+import com.kedokato_dev.houcheck.local.entity.FeedbackEntity
 import com.kedokato_dev.houcheck.network.model.Feedback
 import com.kedokato_dev.houcheck.repository.FeedBackRepository
 import com.kedokato_dev.houcheck.ui.state.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 
-class FetchFeedbackViewModel(
-    private val repository: FeedBackRepository = FeedBackRepository()
-): ViewModel() {
+@HiltViewModel
+class FetchFeedbackViewModel @Inject constructor(
+    private val repository: FeedBackRepository,
+    private val feedbackDao: FeedbackDAO,
+) : ViewModel() {
 
     private val _feedbackState = MutableStateFlow<UiState<List<Feedback>>>(UiState.Idle)
     val feedbackState: StateFlow<UiState<List<Feedback>>> get() = _feedbackState
@@ -24,10 +32,8 @@ class FetchFeedbackViewModel(
     private val _operationState = MutableStateFlow<UiState<String>>(UiState.Idle)
     val operationState: StateFlow<UiState<String>> get() = _operationState
 
-    // Store feedback ID for update/delete operations
-    private var currentFeedbackId: String = ""
-
-    fun getFeedbackByEmail(email: String) {
+    // Sử dụng Flow để lắng nghe sự thay đổi
+    fun observeFeedbackByEmail(email: String) {
         if (email.isBlank()) {
             _feedbackState.value = UiState.Error("Email cannot be empty")
             return
@@ -36,20 +42,23 @@ class FetchFeedbackViewModel(
         _feedbackState.value = UiState.Loading
 
         viewModelScope.launch {
-            try {
-                val feedbacks = repository.getFeedbackByEmail(email)
-                _feedbackState.value = UiState.Success(feedbacks)
-            } catch (e: Exception) {
-                _feedbackState.value = UiState.Error(e.message ?: "Unknown error occurred")
+            feedbackDao.getFeedbackByEmail(email).collect { feedbackEntities ->
+                if (feedbackEntities.isNotEmpty()) {
+                    _feedbackState.value = UiState.Success(feedbackEntities.map { localFeedback ->
+                        Feedback(
+                            id = localFeedback.id,
+                            name = localFeedback.name,
+                            email = localFeedback.email,
+                            message = localFeedback.message,
+                            createdAt = localFeedback.createdAt
+                        )
+                    })
+                } else {
+                    _feedbackState.value = UiState.Success(emptyList())
+                }
             }
         }
     }
-
-
-
-
-
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun sendFeedback(name: String, email: String, message: String) {
@@ -66,8 +75,22 @@ class FetchFeedbackViewModel(
             try {
                 val (success, responseMessage, id) = repository.postFeedback(name, email, message, currentTime)
                 if (success) {
-                    currentFeedbackId = id
                     _operationState.value = UiState.Success("Feedback sent successfully")
+
+                    // Fetch lại dữ liệu từ server và lưu vào Room
+                    val feedbacks = repository.getFeedbackByEmail(email)
+                    withContext(Dispatchers.IO) {
+                        val feedbackEntities = feedbacks.map { networkFeedback ->
+                            FeedbackEntity(
+                                id = networkFeedback.id,
+                                name = networkFeedback.name,
+                                email = networkFeedback.email,
+                                message = networkFeedback.message,
+                                createdAt = networkFeedback.createdAt
+                            )
+                        }
+                        feedbackDao.insertFeedback(feedbackEntities)
+                    }
                 } else {
                     _operationState.value = UiState.Error(responseMessage)
                 }
@@ -75,75 +98,5 @@ class FetchFeedbackViewModel(
                 _operationState.value = UiState.Error(e.message ?: "Failed to send feedback")
             }
         }
-    }
-
-    fun updateFeedback(newMessage: String) {
-        if (newMessage.isBlank()) {
-            _operationState.value = UiState.Error("Message cannot be empty")
-            return
-        }
-
-        if (currentFeedbackId.isBlank()) {
-            _operationState.value = UiState.Error("No feedback selected to update")
-            return
-        }
-
-        _operationState.value = UiState.Loading
-
-        viewModelScope.launch {
-            try {
-                val success = repository.updateFeedback(currentFeedbackId, newMessage)
-                if (success) {
-                    _operationState.value = UiState.Success("Feedback updated successfully")
-                } else {
-                    _operationState.value = UiState.Error("Failed to update feedback")
-                }
-            } catch (e: Exception) {
-                _operationState.value = UiState.Error(e.message ?: "Failed to update feedback")
-            }
-        }
-    }
-
-    fun deleteFeedback() {
-        if (currentFeedbackId.isBlank()) {
-            _operationState.value = UiState.Error("No feedback selected to delete")
-            return
-        }
-
-        _operationState.value = UiState.Loading
-
-        viewModelScope.launch {
-            try {
-                val success = repository.deleteFeedback(currentFeedbackId)
-                if (success) {
-                    currentFeedbackId = ""
-                    _operationState.value = UiState.Success("Feedback deleted successfully")
-                } else {
-                    _operationState.value = UiState.Error("Failed to delete feedback")
-                }
-            } catch (e: Exception) {
-                _operationState.value = UiState.Error(e.message ?: "Failed to delete feedback")
-            }
-        }
-    }
-
-    fun setCurrentFeedback(id: String) {
-        currentFeedbackId = id
-    }
-
-    fun resetOperationState() {
-        _operationState.value = UiState.Idle
-    }
-}
-
-class FetchFeedbackViewModelFactory(
-    private val repository: FeedBackRepository
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(FetchFeedbackViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return FetchFeedbackViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

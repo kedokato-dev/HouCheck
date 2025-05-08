@@ -58,11 +58,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.kedokato_dev.houcheck.network.model.Feedback
-import com.kedokato_dev.houcheck.repository.FeedBackRepository
 import com.kedokato_dev.houcheck.local.dao.AppDatabase
+import com.kedokato_dev.houcheck.network.model.Feedback
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
@@ -73,11 +72,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun FeedbackScreen(navController: NavHostController) {
     val context = LocalContext.current
-    val repository = FeedBackRepository()
-    val viewModelFactory = FetchFeedbackViewModelFactory(repository)
-    val viewModel: FetchFeedbackViewModel = viewModel(factory = viewModelFactory)
+
     val db = AppDatabase(context)
 
+    val viewModel: FetchFeedbackViewModel = hiltViewModel()
     val feedbackState by viewModel.feedbackState.collectAsState()
     val operationState by viewModel.operationState.collectAsState()
 
@@ -99,7 +97,7 @@ fun FeedbackScreen(navController: NavHostController) {
                 email = student.email ?: ""
                 // Fetch feedback history once we have the email
                 if (email.isNotEmpty()) {
-                    viewModel.getFeedbackByEmail(email)
+                    viewModel.observeFeedbackByEmail(email)
                 }
             }
         }
@@ -114,16 +112,16 @@ fun FeedbackScreen(navController: NavHostController) {
             is UiState.Success -> {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar((operationState as UiState.Success<String>).data)
-                    viewModel.resetOperationState()
+//                    viewModel.resetOperationState()
                     if (email.isNotEmpty()) {
-                        viewModel.getFeedbackByEmail(email)
+                        viewModel.observeFeedbackByEmail(email)
                     }
                 }
             }
             is UiState.Error -> {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar((operationState as UiState.Error).message)
-                    viewModel.resetOperationState()
+//                    viewModel.resetOperationState()
                 }
             }
             else -> {}
@@ -182,7 +180,7 @@ fun FeedbackScreen(navController: NavHostController) {
                 Button(
                     onClick = {
                         if (isEditing) {
-                            viewModel.updateFeedback(message)
+//                            viewModel.updateFeedback(message)
                             isEditing = false
                             message = ""
                         } else {
@@ -203,7 +201,7 @@ fun FeedbackScreen(navController: NavHostController) {
                 if (isEditing) {
                     Button(
                         onClick = {
-                            viewModel.deleteFeedback()
+//                            viewModel.deleteFeedback()
                             isEditing = false
                             message = ""
                         },
@@ -220,7 +218,7 @@ fun FeedbackScreen(navController: NavHostController) {
                     OutlinedButton(
                         onClick = {
                             if (email.isNotEmpty()) {
-                                viewModel.getFeedbackByEmail(email)
+                                viewModel.observeFeedbackByEmail(email)
                             }
                         },
                         modifier = Modifier.weight(1f)
@@ -277,7 +275,7 @@ fun FeedbackScreen(navController: NavHostController) {
                                     feedback = feedback,
                                     onClick = {
                                         selectedFeedback = feedback
-                                        viewModel.setCurrentFeedback(feedback.id)
+//                                        viewModel.setCurrentFeedback(feedback.id)
                                         isEditing = true
                                         message = feedback.message
                                     }

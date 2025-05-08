@@ -1,5 +1,6 @@
 package com.kedokato_dev.houcheck.repository
 
+import com.kedokato_dev.houcheck.local.dao.FeedbackDAO
 import com.kedokato_dev.houcheck.network.api.ApiClient
 import com.kedokato_dev.houcheck.network.api.FeedbackService
 import com.kedokato_dev.houcheck.network.model.Feedback
@@ -9,7 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class FeedBackRepository(
-    private val api: FeedbackService = ApiClient.instance.create(FeedbackService::class.java)
+    private val api: FeedbackService = ApiClient.instance.create(FeedbackService::class.java),
+//    private val feedBackDAO: FeedbackDAO
 ) {
 
     suspend fun getFeedbackByEmail(email: String): List<Feedback> = withContext(Dispatchers.IO) {
@@ -25,6 +27,7 @@ class FeedBackRepository(
             throw Exception("Failed to fetch feedback: ${response.errorBody()}")
         }
     }
+
 
 
     suspend fun postFeedback(
