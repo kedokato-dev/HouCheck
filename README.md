@@ -105,6 +105,7 @@ Mã nguồn của Server có thể tìm thấy tại đây: [SinhVienHOUAPI](htt
 [![Retrofit](https://img.shields.io/badge/Retrofit-3E4348?style=for-the-badge&logo=square&logoColor=white)](https://square.github.io/retrofit/)
 [![Coil](https://img.shields.io/badge/Coil-E6E6E6?style=for-the-badge&logo=kotlin&logoColor=black)](https://coil-kt.github.io/coil/)
 [![MpAndroidChart](https://img.shields.io/badge/MPAndroidChart-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/PhilJay/MPAndroidChart)
+[![Hilt](https://img.shields.io/badge/Hilt_Dagger-2196F3?style=for-the-badge&logo=dagger&logoColor=white)](https://dagger.dev/hilt/)
 
 - **Ngôn ngữ**: Kotlin
 - **Framework**: Android SDK
@@ -114,6 +115,7 @@ Mã nguồn của Server có thể tìm thấy tại đây: [SinhVienHOUAPI](htt
 - **Network**: Retrofit
 - **Image**: Coil
 - **Chart**: MpAndroidChart 
+- **Dependency Injection**:  Hilt Dagger 
 ## 📱 Ảnh chụp màn hình
 
 ### Giao diện chính
