@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -89,11 +90,13 @@ fun ScoreScreen(navHostController: NavHostController) {
     // Lấy dữ liệu điểm từ ViewModel
     val listScoreState by listScoreViewModel.state.collectAsState()
 
-    val api = remember { ApiClient.instance.create(ScoreService::class.java) }
-    val dao = AppDatabase.buildDatabase(context).scoreDAO()
-    val repository = remember { ScoreRepository(api, dao) }
-    val viewModel: FetchScoreViewModel = viewModel(factory = ScoreViewModelFactory(repository))
+//    val api = remember { ApiClient.instance.create(ScoreService::class.java) }
+//    val dao = AppDatabase.buildDatabase(context).scoreDAO()
+//    val repository = remember { ScoreRepository(api, dao) }
+//    val viewModel: FetchScoreViewModel = viewModel(factory = ScoreViewModelFactory(repository))
+    val viewModel : FetchScoreViewModel = hiltViewModel()
     val authRepository = remember { AuthRepository(sharedPreferences) }
+
     val fetchState by viewModel.fetchState.collectAsState()
 
     // Theo dõi trạng thái refresh

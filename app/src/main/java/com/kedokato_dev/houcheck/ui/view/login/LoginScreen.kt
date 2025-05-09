@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -56,12 +57,9 @@ fun LoginScreen(navHostController: NavHostController) {
 
     val accountDao : AccountDAO = AppDatabase.buildDatabase(context).accountDAO()
 
-    val authRepository = remember { AuthRepository(sharedPreferences) }
     val accountRepository = remember { AccountRepository(accountDao) }
 
-    val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModelFactory(authRepository)
-    )
+    val authViewModel: AuthViewModel = hiltViewModel()
 
     val accountViewModel: AccountViewModel = viewModel(
         factory = AccountViewModelFactory(accountRepository)
