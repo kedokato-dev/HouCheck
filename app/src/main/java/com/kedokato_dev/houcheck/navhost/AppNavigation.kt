@@ -2,6 +2,16 @@ package com.kedokato_dev.houcheck.navhost
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,36 +30,39 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.kedokato_dev.houcheck.ui.LoginScreen
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.view.exam_schedule.ExamScheduleScreen
 import com.kedokato_dev.houcheck.ui.view.feedback.FeedbackScreen
 import com.kedokato_dev.houcheck.ui.view.home.HomeScreen
-import com.kedokato_dev.houcheck.ui.view.score_list.ListScoreScreen
-import com.kedokato_dev.houcheck.ui.view.week_schedule.ScheduleScreen
+import com.kedokato_dev.houcheck.ui.view.profile.StudentInfoScreen
 import com.kedokato_dev.houcheck.ui.view.score.ScoreScreen
+import com.kedokato_dev.houcheck.ui.view.score_list.ListScoreScreen
 import com.kedokato_dev.houcheck.ui.view.settings.SettingScreen
 import com.kedokato_dev.houcheck.ui.view.splash.SplashScreen
-import com.kedokato_dev.houcheck.ui.view.profile.StudentInfoScreen
 import com.kedokato_dev.houcheck.ui.view.training_score.TrainingScoreScreen
+import com.kedokato_dev.houcheck.ui.view.week_schedule.ScheduleScreen
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun AppNavigation() {
+    val navController = rememberNavController()
+    AppNavigation(navController)
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    // Start with the initial state explicitly set to false
-    val initialRoute = remember { mutableStateOf("splash") }
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: initialRoute.value
-
-    // Initialize a state to indicate if app has fully started - initially false
+    val currentRoute = navBackStackEntry?.destination?.route ?: "splash"
     val appFullyStarted = remember { mutableStateOf(false) }
 
-    // Determine bottom bar visibility directly
     val bottomBarVisible = currentRoute !in listOf(
         "training_score", "login", "studentInfo", "score", "list_score", "splash",
         "exam_schedule", "week_schedule", "feedback"
@@ -58,24 +71,17 @@ fun AppNavigation(navController: NavHostController) {
     Scaffold(
         contentWindowInsets = WindowInsets.systemBars,
         bottomBar = {
-            // Only include bottom bar in composition if it should be visible
-            if (bottomBarVisible) {
+            AnimatedVisibility(
+                visible = bottomBarVisible,
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it })
+            ) {
                 BottomNavigationBar(
                     navController = navController,
                     items = listOf(
                         BottomNavItem("Trang chủ", "home", Icons.Filled.Home, Icons.Outlined.Home),
-                        BottomNavItem(
-                            "Hồ sơ",
-                            "studentInfo",
-                            Icons.Filled.Person,
-                            Icons.Outlined.Person
-                        ),
-                        BottomNavItem(
-                            "Cài đặt",
-                            "settings",
-                            Icons.Filled.Settings,
-                            Icons.Outlined.Settings
-                        )
+                        BottomNavItem("Hồ sơ", "studentInfo", Icons.Filled.Person, Icons.Outlined.Person),
+                        BottomNavItem("Cài đặt", "settings", Icons.Filled.Settings, Icons.Outlined.Settings)
                     ),
                     primaryColor = HNOUDarkBlue
                 )
@@ -87,24 +93,14 @@ fun AppNavigation(navController: NavHostController) {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            NavHost(navController = navController, startDestination = "splash") {
-                composable("home") {
-                    // When reaching home screen, app is considered fully started
-                    appFullyStarted.value = true
-                    HomeScreen(navController)
-                }
-                composable("login") { LoginScreen(navController) }
-                composable("studentInfo") { StudentInfoScreen(navController) }
-                composable("settings") {
-                    // When reaching settings screen, app is considered fully started
-                    appFullyStarted.value = true
-                    SettingScreen(navController)
-                }
-                composable("training_score") { TrainingScoreScreen(navController) }
-                composable("score") { ScoreScreen(navController) }
-                composable("list_score") { ListScoreScreen(navController) }
-                composable("exam_schedule") { ExamScheduleScreen(navController) }
-                composable("week_schedule") { ScheduleScreen(navController) }
+            NavHost(
+                navController = navController,
+                startDestination = "splash",
+                enterTransition = { getEnterTransition(initialState, targetState) },
+                exitTransition = { getExitTransition(initialState, targetState) },
+                popEnterTransition = { getPopEnterTransition(initialState, targetState) },
+                popExitTransition = { getPopExitTransition(initialState, targetState) }
+            ) {
                 composable("splash") {
                     SplashScreen {
                         navController.navigate("login") {
@@ -112,12 +108,94 @@ fun AppNavigation(navController: NavHostController) {
                         }
                     }
                 }
+                composable("login") {
+                    LoginScreen(navController)
+                }
+                composable("home") {
+                    appFullyStarted.value = true
+                    HomeScreen(navController)
+                }
+                composable("studentInfo") {
+                    StudentInfoScreen(navController)
+                }
+                composable("settings") {
+                    appFullyStarted.value = true
+                    SettingScreen(navController)
+                }
+                composable("training_score") {
+                    TrainingScoreScreen(navController)
+                }
+                composable("score") {
+                    ScoreScreen(navController)
+                }
+                composable("list_score") {
+                    ListScoreScreen(navController)
+                }
+                composable("exam_schedule") {
+                    ExamScheduleScreen(navController)
+                }
+                composable("week_schedule") {
+                    ScheduleScreen(navController)
+                }
                 composable("feedback") {
-                    // When reaching feedback screen, app is considered fully started
                     appFullyStarted.value = true
                     FeedbackScreen(navController)
                 }
             }
         }
     }
+}
+
+private fun getEnterTransition(
+    initialState: NavBackStackEntry,
+    targetState: NavBackStackEntry
+): EnterTransition {
+    val initialRoute = initialState.destination.route ?: ""
+    val targetRoute = targetState.destination.route ?: ""
+    
+    return when {
+        targetRoute == "splash" -> fadeIn(animationSpec = tween(700))
+        targetRoute == "login" -> fadeIn(animationSpec = tween(700))
+        initialRoute == "splash" -> fadeIn(animationSpec = tween(700))
+        else -> slideInHorizontally(
+            initialOffsetX = { fullWidth -> fullWidth },
+            animationSpec = tween(300)
+        ) + fadeIn(animationSpec = tween(300))
+    }
+}
+
+private fun getExitTransition(
+    initialState: NavBackStackEntry,
+    targetState: NavBackStackEntry
+): ExitTransition {
+    val initialRoute = initialState.destination.route ?: ""
+    val targetRoute = targetState.destination.route ?: ""
+    
+    return when {
+        initialRoute == "splash" -> fadeOut(animationSpec = tween(700))
+        else -> slideOutHorizontally(
+            targetOffsetX = { fullWidth -> -fullWidth / 3 },
+            animationSpec = tween(300)
+        ) + fadeOut(animationSpec = tween(300))
+    }
+}
+
+private fun getPopEnterTransition(
+    initialState: NavBackStackEntry,
+    targetState: NavBackStackEntry
+): EnterTransition {
+    return slideInHorizontally(
+        initialOffsetX = { fullWidth -> -fullWidth / 3 },
+        animationSpec = tween(300)
+    ) + fadeIn(animationSpec = tween(300))
+}
+
+private fun getPopExitTransition(
+    initialState: NavBackStackEntry,
+    targetState: NavBackStackEntry
+): ExitTransition {
+    return slideOutHorizontally(
+        targetOffsetX = { fullWidth -> fullWidth },
+        animationSpec = tween(300)
+    ) + fadeOut(animationSpec = tween(300))
 }

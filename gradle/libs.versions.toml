@@ -23,6 +23,7 @@ hilt-navigation-compose = "1.2.0"
 
 coil = "2.4.0"
 mpandroidchart = "v3.1.0"
+accompanist = "0.33.2-alpha"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -69,6 +70,7 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 
 mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mpandroidchart" }
 
+accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist" }
 
 
 [plugins]

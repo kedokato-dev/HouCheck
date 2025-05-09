@@ -80,6 +80,9 @@ dependencies {
     // mpandroidchart
     implementation(libs.mpandroidchart)
 
+    // animation navigate screen
+    implementation(libs.accompanist.navigation.animation)
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
