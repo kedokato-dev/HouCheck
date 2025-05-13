@@ -80,6 +80,9 @@ dependencies {
     // mpandroidchart
     implementation(libs.mpandroidchart)
 
+    // calendar
+    implementation(libs.android.calendar.core)
+
     // animation navigate screen
     implementation(libs.accompanist.navigation.animation)
 

@@ -25,6 +25,9 @@ coil = "2.4.0"
 mpandroidchart = "v3.1.0"
 accompanist = "0.33.2-alpha"
 
+#calendar
+calendar-core = "2.5.3"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -71,6 +74,8 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mpandroidchart" }
 
 accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist" }
+#calendar
+android-calendar-core = { group = "com.kizitonwose.calendar", name = "core", version.ref = "calendar-core" }
 
 
 [plugins]
