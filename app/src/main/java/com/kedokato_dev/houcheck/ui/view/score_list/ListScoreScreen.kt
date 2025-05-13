@@ -1,6 +1,5 @@
 package com.kedokato_dev.houcheck.ui.view.score_list
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -56,42 +55,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
-import com.kedokato_dev.houcheck.network.api.ApiClient
-import com.kedokato_dev.houcheck.network.api.ListScoreService
 import com.kedokato_dev.houcheck.network.model.CourseResult
-import com.kedokato_dev.houcheck.repository.AuthRepository
-import com.kedokato_dev.houcheck.repository.ListScoreRepository
-import com.kedokato_dev.houcheck.local.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
+import com.kedokato_dev.houcheck.ui.view.login.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScoreScreen(
     navHostController: NavHostController
 ) {
-    val context = LocalContext.current
-    val api = remember { ApiClient.instance.create(ListScoreService::class.java) }
-    val dao = AppDatabase.buildDatabase(context).courseResultDAO()
-    val repository = remember {
-        ListScoreRepository(
-            api, dao
-        )
-    }
-    val sharedPreferences = remember {
-        context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
-    }
-    val authRepository = remember { AuthRepository(sharedPreferences) }
 
-    val viewModel: ListScoreViewModel = viewModel(
-        factory = ListScoreViewModelFactory(repository)
-    )
+    val context = LocalContext.current
+
+
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val sessionId = authViewModel.getSessionId().toString()
+
+
+    val viewModel : ListScoreViewModel = hiltViewModel()
     val fetchState = viewModel.state.collectAsState()
 
     // Search state
@@ -99,7 +87,7 @@ fun ListScoreScreen(
     var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        viewModel.fetchListScore(authRepository.getSessionId().toString())
+        viewModel.fetchListScore(sessionId)
     }
 
     Scaffold(
@@ -190,7 +178,7 @@ fun ListScoreScreen(
                     },
                     actions = {
                         IconButton(onClick = {
-                            viewModel.refreshListScore(authRepository.getSessionId().toString())
+                            viewModel.refreshListScore(sessionId)
                             Toast.makeText(context, "Đang tải lại...", Toast.LENGTH_SHORT).show()
                         }) {
                             Icon(

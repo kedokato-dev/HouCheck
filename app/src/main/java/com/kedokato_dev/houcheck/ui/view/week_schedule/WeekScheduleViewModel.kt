@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.kedokato_dev.houcheck.network.model.ScheduleResponse
 import com.kedokato_dev.houcheck.repository.WeekScheduleRepository
 import com.kedokato_dev.houcheck.ui.state.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class WeekScheduleViewModel(
+@HiltViewModel
+class WeekScheduleViewModel @Inject constructor(
     private  val repository: WeekScheduleRepository,
 ): ViewModel() {
     private val _state = MutableStateFlow<UiState<ScheduleResponse>>(UiState.Idle)

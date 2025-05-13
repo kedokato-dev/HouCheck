@@ -9,6 +9,7 @@ import com.kedokato_dev.houcheck.local.dao.FeedbackDAO
 import com.kedokato_dev.houcheck.local.dao.ScoreDAO
 import com.kedokato_dev.houcheck.local.dao.StudentDAO
 import com.kedokato_dev.houcheck.local.dao.TrainingScoreDAO
+import com.kedokato_dev.houcheck.local.dao.WeekScheduleDAO
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,6 +36,11 @@ object DatabaseModule {
     fun provideExamScheduleDAO(database: AppDatabase): ExamScheduleDAO{
         return database.examScheduleDAO()
     }
+
+//    @Provides
+//    fun provideWeekScheduleDAO(database: AppDatabase): WeekScheduleDAO{
+//        return database.weekScheduleDAO()
+//    }
 
     @Provides
     fun provideScoreDAO(database: AppDatabase): ScoreDAO{

@@ -11,6 +11,7 @@ import com.kedokato_dev.houcheck.local.entity.FeedbackEntity
 import com.kedokato_dev.houcheck.local.entity.ScoreEntity
 import com.kedokato_dev.houcheck.local.entity.StudentEntity
 import com.kedokato_dev.houcheck.local.entity.TrainingScoreEntity
+import com.kedokato_dev.houcheck.local.entity.WeekScheduleEntity
 
 private const val DATABASE_NAME = "houCheck_database"
 private const val DATABASE_VERSION = 2
@@ -29,6 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun examScheduleDAO(): ExamScheduleDAO
     abstract fun accountDAO(): AccountDAO
     abstract fun feedbackDAO(): FeedbackDAO
+//    abstract fun weekScheduleDAO(): WeekScheduleDAO
 
     companion object {
         private var instance: AppDatabase? = null

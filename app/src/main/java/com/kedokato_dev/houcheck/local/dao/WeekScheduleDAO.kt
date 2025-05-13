@@ -9,7 +9,7 @@ import com.kedokato_dev.houcheck.local.entity.WeekScheduleEntity
 interface WeekScheduleDAO {
 
     @Query("SELECT * FROM week_schedule")
-    suspend fun getAllWeekSchedules(): WeekScheduleEntity
+    suspend fun getAllWeekSchedules(): List<WeekScheduleEntity>
 
     @Insert
     suspend fun insertWeekSchedule(weekSchedule: WeekScheduleEntity)

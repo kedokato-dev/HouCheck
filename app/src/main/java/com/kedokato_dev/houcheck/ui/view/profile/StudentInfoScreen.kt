@@ -1,7 +1,5 @@
 package com.kedokato_dev.houcheck.ui.view.profile
 
-import FetchInfoStudentViewModel
-import FetchState
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -64,15 +62,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
-import com.kedokato_dev.houcheck.network.api.ApiClient
-import com.kedokato_dev.houcheck.network.api.InfoStudentService
 import com.kedokato_dev.houcheck.network.model.Student
 import com.kedokato_dev.houcheck.repository.AuthRepository
-import com.kedokato_dev.houcheck.repository.StudentInfoRepository
-import com.kedokato_dev.houcheck.local.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.theme.accentColor
 import com.kedokato_dev.houcheck.ui.theme.backgroundColor
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
@@ -86,13 +80,8 @@ fun StudentInfoScreen(navHostController: NavHostController) {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
 
-    val api = remember { ApiClient.instance.create(InfoStudentService::class.java) }
-    val dao = AppDatabase.buildDatabase(context).studentDAO()
-    val repository = remember { StudentInfoRepository(api, dao) }
 
-    val viewModel: FetchInfoStudentViewModel = viewModel(
-        factory = InfoStudentViewModelFactory(repository)
-    )
+    val viewModel : InfoStudentViewModel = hiltViewModel()
 
     val authRepository = remember { AuthRepository(sharedPreferences) }
 

@@ -5,9 +5,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.kedokato_dev.houcheck.repository.AccountRepository
 import com.kedokato_dev.houcheck.local.entity.AccountEntity
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AccountViewModel(
+@HiltViewModel
+class AccountViewModel @Inject constructor(
     private val repository: AccountRepository
 ): ViewModel() {
 

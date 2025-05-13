@@ -9,9 +9,9 @@ import com.kedokato_dev.houcheck.network.model.DaySchedule
 data class WeekScheduleEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val weekValue: String,
-    val weekDays: List<String>,
-    val byDays: Map<String, DaySchedule>
+    val weekValue: String = "",
+    val weekDays: List<String> = emptyList(),
+    val byDays: Map<String, DaySchedule> = emptyMap(),
 )
 
 

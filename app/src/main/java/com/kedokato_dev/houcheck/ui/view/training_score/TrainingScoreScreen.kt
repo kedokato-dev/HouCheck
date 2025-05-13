@@ -1,7 +1,5 @@
 package com.kedokato_dev.houcheck.ui.view.training_score
 
-import android.content.Context
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,8 +25,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,64 +37,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.kedokato_dev.houcheck.network.api.ApiClient
-import com.kedokato_dev.houcheck.network.api.TrainingScoreService
 import com.kedokato_dev.houcheck.network.model.TrainingScore
-import com.kedokato_dev.houcheck.repository.AuthRepository
-import com.kedokato_dev.houcheck.repository.TrainingScoreRepository
-import com.kedokato_dev.houcheck.local.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.components.EmptyStateComponent
-import com.kedokato_dev.houcheck.ui.components.ErrorComponent
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.components.chart.ScoreBarChart
-import com.kedokato_dev.houcheck.ui.theme.HNOUGradientColors
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
+import com.kedokato_dev.houcheck.ui.view.login.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrainingScoreScreen(navController: NavHostController) {
     val context = LocalContext.current
-    val api = remember { ApiClient.instance.create(TrainingScoreService::class.java) }
-    val dao = AppDatabase.buildDatabase(context).trainingScoreDAO()
-    val repository = remember {
-        TrainingScoreRepository(
-            api, dao
-        )
-    }
-    val sharedPreferences = remember {
-        context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
-    }
-    val authRepository = remember { AuthRepository(sharedPreferences) }
 
-    val viewModel: FetchTrainingScoreViewModel = viewModel(
-        factory = TrainingScoreViewModelFactory(repository)
-    )
+
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val sessionId = authViewModel.getSessionId().toString()
+    val viewModel: FetchTrainingScoreViewModel = hiltViewModel()
     val fetchState by viewModel.fetchState.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchTrainingScore(
-            authRepository.getSessionId().toString()
+            sessionId
         )
     }
 
@@ -144,7 +116,7 @@ fun TrainingScoreScreen(navController: NavHostController) {
                 actions = {
                     // Nút làm mới điểm
                     IconButton(onClick = {
-                        viewModel.refreshData(authRepository.getSessionId().toString())
+                        viewModel.refreshData(sessionId)
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
@@ -175,7 +147,7 @@ fun TrainingScoreScreen(navController: NavHostController) {
                         buttonText = "Tải dữ liệu",
                         onButtonClick = {
                             viewModel.fetchTrainingScore(
-                                authRepository.getSessionId().toString()
+                                sessionId
                             )
                         }
                     )
@@ -281,7 +253,7 @@ fun TrainingScoreScreen(navController: NavHostController) {
                         message = (fetchState as FetchTrainingScoreState.Error).message,
                         onRetryClick = {
                             viewModel.refreshData(
-                                authRepository.getSessionId().toString()
+                                sessionId
                             )
                         },
                         primaryColor = primaryColor

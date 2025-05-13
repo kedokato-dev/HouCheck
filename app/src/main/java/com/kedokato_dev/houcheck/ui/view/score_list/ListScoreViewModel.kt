@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.kedokato_dev.houcheck.network.model.CourseResult
 import com.kedokato_dev.houcheck.repository.ListScoreRepository
 import com.kedokato_dev.houcheck.ui.state.UiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ListScoreViewModel(
+@HiltViewModel
+class ListScoreViewModel @Inject constructor(
     private val repository: ListScoreRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow<UiState<List<CourseResult>>>(UiState.Idle)

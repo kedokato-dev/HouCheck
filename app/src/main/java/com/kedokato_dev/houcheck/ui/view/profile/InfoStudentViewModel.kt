@@ -1,10 +1,14 @@
+package com.kedokato_dev.houcheck.ui.view.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kedokato_dev.houcheck.network.model.Student
 import com.kedokato_dev.houcheck.repository.StudentInfoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+
 
 sealed class FetchState {
     object Idle : FetchState()
@@ -13,9 +17,13 @@ sealed class FetchState {
     data class Error(val message: String) : FetchState()
 }
 
-class FetchInfoStudentViewModel(
+
+@HiltViewModel
+class InfoStudentViewModel @Inject constructor  (
     private val repository: StudentInfoRepository
 ) : ViewModel() {
+
+
 
     private val _fetchState = MutableStateFlow<FetchState>(FetchState.Idle)
     val fetchState: StateFlow<FetchState> get() = _fetchState
@@ -24,7 +32,7 @@ class FetchInfoStudentViewModel(
         viewModelScope.launch {
             _fetchState.value = FetchState.Loading
 
-            val localStudent = repository.getLocalStudentById() // ✅ hàm suspend
+            val localStudent = repository.getLocalStudentById()
             if (localStudent != null) {
                 _fetchState.value = FetchState.Success(localStudent)
                 return@launch
@@ -37,6 +45,5 @@ class FetchInfoStudentViewModel(
             )
         }
     }
-
 }
 

@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kedokato_dev.houcheck.network.model.TrainingScore
 import com.kedokato_dev.houcheck.repository.TrainingScoreRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class FetchTrainingScoreState {
     object Idle : FetchTrainingScoreState()
@@ -15,7 +17,8 @@ sealed class FetchTrainingScoreState {
     data class Error(val message: String) : FetchTrainingScoreState()
 }
 
-class FetchTrainingScoreViewModel(
+@HiltViewModel
+class FetchTrainingScoreViewModel @Inject constructor(
     private val repository: TrainingScoreRepository
 ) : ViewModel() {
     private val _fetchState = MutableStateFlow<FetchTrainingScoreState>(FetchTrainingScoreState.Idle)

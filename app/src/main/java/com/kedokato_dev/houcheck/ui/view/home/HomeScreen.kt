@@ -1,9 +1,4 @@
 package com.kedokato_dev.houcheck.ui.view.home
-
-// In HomeScreen.kt
-
-import FetchInfoStudentViewModel
-import FetchState
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -60,31 +55,22 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
-import com.kedokato_dev.houcheck.network.api.ApiClient
-import com.kedokato_dev.houcheck.network.api.InfoStudentService
-import com.kedokato_dev.houcheck.network.api.ScoreService
-import com.kedokato_dev.houcheck.network.api.WeekScheduleService
 import com.kedokato_dev.houcheck.network.model.ScheduleResponse
-import com.kedokato_dev.houcheck.repository.AuthRepository
-import com.kedokato_dev.houcheck.repository.ScoreRepository
-import com.kedokato_dev.houcheck.repository.StudentInfoRepository
-import com.kedokato_dev.houcheck.repository.WeekScheduleRepository
-import com.kedokato_dev.houcheck.local.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.HouCheckTheme
 import com.kedokato_dev.houcheck.ui.theme.backgroundColor
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 import com.kedokato_dev.houcheck.ui.theme.secondaryColor
-import com.kedokato_dev.houcheck.ui.view.profile.InfoStudentViewModelFactory
+import com.kedokato_dev.houcheck.ui.view.login.AuthViewModel
+import com.kedokato_dev.houcheck.ui.view.profile.FetchState
+import com.kedokato_dev.houcheck.ui.view.profile.InfoStudentViewModel
 import com.kedokato_dev.houcheck.ui.view.score.FetchScoreState
 import com.kedokato_dev.houcheck.ui.view.score.FetchScoreViewModel
-import com.kedokato_dev.houcheck.ui.view.score.ScoreViewModelFactory
 import com.kedokato_dev.houcheck.ui.view.week_schedule.WeekScheduleViewModel
-import com.kedokato_dev.houcheck.ui.view.week_schedule.WeekScheduleViewModelFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -94,37 +80,16 @@ fun HomeScreen(navController: NavHostController) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    val database: AppDatabase = AppDatabase.buildDatabase(context)
+    val authViewModel : AuthViewModel = hiltViewModel()
 
-    val sharedPreferences = remember {
-        context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
-    }
+    val sessionId = authViewModel.getSessionId().toString()
 
-    val fetchInfoStudentApi =
-        remember { ApiClient.instance.create(InfoStudentService::class.java) }
-    val fetchScoreApi = remember { ApiClient.instance.create(ScoreService::class.java) }
-    val studentDao = database.studentDAO()
-    val scoreDao = database.scoreDAO()
-    val repository = remember { StudentInfoRepository(fetchInfoStudentApi, studentDao) }
-    val fetchScoreRepo = remember { ScoreRepository(fetchScoreApi, scoreDao) }
-    val authRepository = remember { AuthRepository(sharedPreferences) }
+    val fetchInfoViewModel : InfoStudentViewModel = hiltViewModel()
+    val fetchScoreViewModel: FetchScoreViewModel =  hiltViewModel()
+    val fetchWeekScheduleViewModel: WeekScheduleViewModel = hiltViewModel()
 
-    val viewModel: FetchInfoStudentViewModel = viewModel(
-        factory = InfoStudentViewModelFactory(repository)
-    )
 
-    val fetchScoreViewModel: FetchScoreViewModel = viewModel(
-        factory = ScoreViewModelFactory(fetchScoreRepo)
-    )
-
-    // Add Week Schedule ViewModel
-    val fetchWeekScheduleApi = remember { ApiClient.instance.create(WeekScheduleService::class.java) }
-    val fetchWeekScheduleRepository = remember { WeekScheduleRepository(fetchWeekScheduleApi) }
-    val fetchWeekScheduleViewModel: WeekScheduleViewModel = viewModel(
-        factory = WeekScheduleViewModelFactory(fetchWeekScheduleRepository)
-    )
-
-    val fetchState by viewModel.fetchState.collectAsState()
+    val fetchState by fetchInfoViewModel.fetchState.collectAsState()
     val fetchScoreState by fetchScoreViewModel.fetchState.collectAsState()
 
     // Week Schedule State
@@ -153,10 +118,9 @@ fun HomeScreen(navController: NavHostController) {
 
 
     LaunchedEffect(Unit) {
-        viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
-        fetchScoreViewModel.fetchScore(authRepository.getSessionId().toString())
-        // Fetch the week schedule when the HomeScreen is launched
-        fetchWeekScheduleViewModel.fetchWeekSchedule(authRepository.getSessionId().toString(), weekRange)
+        fetchInfoViewModel.fetchStudentIfNeeded(sessionId)
+        fetchScoreViewModel.fetchScore(sessionId)
+        fetchWeekScheduleViewModel.fetchWeekSchedule(sessionId, weekRange)
     }
 
     Box(

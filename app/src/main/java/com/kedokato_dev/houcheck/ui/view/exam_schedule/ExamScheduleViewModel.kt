@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kedokato_dev.houcheck.network.model.ExamSchedule
 import com.kedokato_dev.houcheck.repository.ExamScheduleRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.scopes.ViewScoped
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class FetchExamScheduleState {
     object Idle : FetchExamScheduleState()
@@ -15,8 +18,8 @@ sealed class FetchExamScheduleState {
     data class Success(val schedules: List<ExamSchedule>) : FetchExamScheduleState()
     data class Error(val message: String) : FetchExamScheduleState()
 }
-
-class FetchExamScheduleViewModel(
+@HiltViewModel
+class FetchExamScheduleViewModel @Inject constructor(
     private val repository: ExamScheduleRepository
 ) : ViewModel() {
     private val _fetchState = MutableStateFlow<FetchExamScheduleState>(FetchExamScheduleState.Idle)

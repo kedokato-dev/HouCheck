@@ -1,6 +1,5 @@
 package com.kedokato_dev.houcheck.ui.view.score
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,70 +31,40 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.kedokato_dev.houcheck.local.dao.AppDatabase
 import com.kedokato_dev.houcheck.local.entity.CourseResultEntity
-import com.kedokato_dev.houcheck.network.api.ApiClient
-import com.kedokato_dev.houcheck.network.api.ListScoreService
-import com.kedokato_dev.houcheck.network.api.ScoreService
 import com.kedokato_dev.houcheck.network.model.CourseResult
 import com.kedokato_dev.houcheck.network.model.Score
-import com.kedokato_dev.houcheck.repository.AuthRepository
-import com.kedokato_dev.houcheck.repository.ListScoreRepository
-import com.kedokato_dev.houcheck.repository.ScoreRepository
 import com.kedokato_dev.houcheck.ui.components.EmptyStateComponent
 import com.kedokato_dev.houcheck.ui.components.ErrorComponent
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
+import com.kedokato_dev.houcheck.ui.view.login.AuthViewModel
 import com.kedokato_dev.houcheck.ui.view.score.components.chart.AcademicStatusSection
 import com.kedokato_dev.houcheck.ui.view.score.components.chart.GPASummarySection
 import com.kedokato_dev.houcheck.ui.view.score.components.chart.GradeDistributionSection
 import com.kedokato_dev.houcheck.ui.view.score.components.chart.ProgressSection
 import com.kedokato_dev.houcheck.ui.view.score_list.ListScoreViewModel
-import com.kedokato_dev.houcheck.ui.view.score_list.ListScoreViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScoreScreen(navHostController: NavHostController) {
-    val context = LocalContext.current
-    val sharedPreferences = remember {
-        context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
-    }
-
-    val listScoreApi = remember { ApiClient.instance.create(ListScoreService::class.java) }
-    val courseResultDAO = AppDatabase.buildDatabase(context).courseResultDAO()
-    val listScoreRepository = remember {
-        ListScoreRepository(
-            listScoreApi, courseResultDAO
-        )
-    }
-
-    val listScoreViewModel: ListScoreViewModel = viewModel(
-        factory = ListScoreViewModelFactory(listScoreRepository)
-    )
-
-    val db = AppDatabase.buildDatabase(context)
-
+    val listScoreViewModel: ListScoreViewModel = hiltViewModel()
 
     // Lấy dữ liệu điểm từ ViewModel
     val listScoreState by listScoreViewModel.state.collectAsState()
 
-//    val api = remember { ApiClient.instance.create(ScoreService::class.java) }
-//    val dao = AppDatabase.buildDatabase(context).scoreDAO()
-//    val repository = remember { ScoreRepository(api, dao) }
-//    val viewModel: FetchScoreViewModel = viewModel(factory = ScoreViewModelFactory(repository))
     val viewModel : FetchScoreViewModel = hiltViewModel()
-    val authRepository = remember { AuthRepository(sharedPreferences) }
+    val authViewModel : AuthViewModel = hiltViewModel()
+    val sessionId = authViewModel.getSessionId().toString()
 
     val fetchState by viewModel.fetchState.collectAsState()
 
@@ -105,13 +74,13 @@ fun ScoreScreen(navHostController: NavHostController) {
     // Hàm refresh data
     val refreshData = {
         isRefreshing.value = true
-        viewModel.refreshScore(authRepository.getSessionId().toString())
+        viewModel.refreshScore(sessionId)
         isRefreshing.value = false
     }
 
     LaunchedEffect(Unit) {
-        viewModel.fetchScore(authRepository.getSessionId().toString())
-        listScoreViewModel.fetchListScore(authRepository.getSessionId().toString())
+        viewModel.fetchScore(sessionId)
+        listScoreViewModel.fetchListScore(sessionId)
     }
 
     Scaffold(
@@ -169,7 +138,7 @@ fun ScoreScreen(navHostController: NavHostController) {
                 is FetchScoreState.Idle -> {
                     EmptyStateComponent(
                       onButtonClick = {
-                          viewModel.fetchScore(authRepository.getSessionId().toString())
+                          viewModel.fetchScore(sessionId)
                       },
                     )
                 }

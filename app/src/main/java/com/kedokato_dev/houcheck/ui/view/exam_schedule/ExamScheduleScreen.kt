@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.network.api.ApiClient
@@ -63,6 +64,7 @@ import com.kedokato_dev.houcheck.local.dao.AppDatabase
 import com.kedokato_dev.houcheck.ui.components.EmptyStateComponent
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
+import com.kedokato_dev.houcheck.ui.view.login.AuthViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -71,24 +73,17 @@ import java.util.Locale
 @Composable
 fun ExamScheduleScreen(navController: NavHostController) {
     val context = LocalContext.current
-    // Get the database and DAO
-    val examScheduleDAO = AppDatabase.buildDatabase(context).examScheduleDAO()
-    val api = ApiClient.instance.create(ExamScheduleService::class.java)
-    val repository = remember { ExamScheduleRepository(api, examScheduleDAO) }
-    val sharedPreferences = remember {
-        context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
-    }
-    val authRepository = remember { AuthRepository(sharedPreferences) }
 
-    val viewModel: FetchExamScheduleViewModel = viewModel(
-        factory = ExamScheduleViewModelFactory(repository)
-    )
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val sessionId = authViewModel.getSessionId().toString()
+
+    val viewModel: FetchExamScheduleViewModel = hiltViewModel()
     val fetchState by viewModel.fetchState.collectAsState()
     val scrollState = rememberScrollState()
 
     // Load data when the screen is first displayed
     LaunchedEffect(Unit) {
-        viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
+        viewModel.fetchExamSchedules(sessionId)
     }
 
     // Theme colors
@@ -120,7 +115,7 @@ fun ExamScheduleScreen(navController: NavHostController) {
                     // Add refresh button here
                     IconButton(
                         onClick = {
-                            viewModel.refreshExamSchedules(authRepository.getSessionId().toString())
+                            viewModel.refreshExamSchedules(sessionId)
                         }
                     ) {
                         Icon(
@@ -160,7 +155,7 @@ fun ExamScheduleScreen(navController: NavHostController) {
                             buttonText = "Tải lịch thi",
                             onButtonClick = {
                                 viewModel.fetchExamSchedules(
-                                    authRepository.getSessionId().toString()
+                                   sessionId
                                 )
                             },
                             primaryColor = HNOUDarkBlue,
@@ -220,7 +215,7 @@ fun ExamScheduleScreen(navController: NavHostController) {
                         ErrorStateSection(
                             message = (fetchState as FetchExamScheduleState.Error).message,
                             onRetryClick = {
-                                viewModel.fetchExamSchedules(authRepository.getSessionId().toString())
+                                viewModel.fetchExamSchedules(sessionId)
                             },
                             primaryColor = primaryColor
                         )

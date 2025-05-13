@@ -1,6 +1,5 @@
 package com.kedokato_dev.houcheck.ui.view.week_schedule
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -58,18 +57,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.kedokato_dev.houcheck.R
-import com.kedokato_dev.houcheck.network.api.ApiClient
-import com.kedokato_dev.houcheck.network.api.WeekScheduleService
 import com.kedokato_dev.houcheck.network.model.ClassInfo
 import com.kedokato_dev.houcheck.network.model.DaySchedule
-import com.kedokato_dev.houcheck.repository.AuthRepository
-import com.kedokato_dev.houcheck.repository.WeekScheduleRepository
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
+import com.kedokato_dev.houcheck.ui.view.login.AuthViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -81,16 +77,10 @@ fun ScheduleScreen(
     navHostController: NavHostController
 ) {
     val context = LocalContext.current
-    val api = remember { ApiClient.instance.create(WeekScheduleService::class.java) }
-    val repository = remember { WeekScheduleRepository(api) }
-    val sharedPreferences = remember {
-        context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
-    }
-    val authRepository = remember { AuthRepository(sharedPreferences) }
 
-    val viewModel: WeekScheduleViewModel = viewModel(
-        factory = WeekScheduleViewModelFactory(repository)
-    )
+    val viewModel : WeekScheduleViewModel = hiltViewModel()
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val sessionId = authViewModel.getSessionId().toString()
 
     // Current date for initial display
     val today = remember { Calendar.getInstance() }
@@ -112,7 +102,7 @@ fun ScheduleScreen(
 
     LaunchedEffect(weekRange) {
         viewModel.fetchWeekSchedule(
-            authRepository.getSessionId().toString(),
+            sessionId,
             weekRange
         )
     }
