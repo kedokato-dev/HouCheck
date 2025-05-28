@@ -86,6 +86,12 @@ dependencies {
     // animation navigate screen
     implementation(libs.accompanist.navigation.animation)
 
+    // swipe refresh
+    implementation(libs.accompanist.swiperefresh)
+
+    implementation(libs.compose.foundation)
+
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

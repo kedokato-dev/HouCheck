@@ -23,10 +23,14 @@ hilt-navigation-compose = "1.2.0"
 
 coil = "2.4.0"
 mpandroidchart = "v3.1.0"
-accompanist = "0.33.2-alpha"
+
 
 #calendar
 calendar-core = "2.5.3"
+
+accompanist = "0.34.0"
+
+compose-foundation = "1.6.1" # hoặc mới hơn
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -76,6 +80,12 @@ mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", versio
 accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation", version.ref = "accompanist" }
 #calendar
 android-calendar-core = { group = "com.kizitonwose.calendar", name = "core", version.ref = "calendar-core" }
+
+# swipe refresh
+accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanist" }
+
+
+compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose-foundation" }
 
 
 [plugins]

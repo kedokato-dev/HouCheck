@@ -1,4 +1,6 @@
 package com.kedokato_dev.houcheck.ui.view.home
+
+
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -38,7 +40,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +61,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.network.model.ScheduleResponse
 import com.kedokato_dev.houcheck.ui.state.UiState
@@ -80,81 +86,87 @@ fun HomeScreen(navController: NavHostController) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
 
-    val authViewModel : AuthViewModel = hiltViewModel()
-
-    val sessionId = authViewModel.getSessionId().toString()
-
-    val fetchInfoViewModel : InfoStudentViewModel = hiltViewModel()
-    val fetchScoreViewModel: FetchScoreViewModel =  hiltViewModel()
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val fetchInfoViewModel: InfoStudentViewModel = hiltViewModel()
+    val fetchScoreViewModel: FetchScoreViewModel = hiltViewModel()
     val fetchWeekScheduleViewModel: WeekScheduleViewModel = hiltViewModel()
 
-
+    val sessionId = authViewModel.getSessionId().toString()
     val fetchState by fetchInfoViewModel.fetchState.collectAsState()
     val fetchScoreState by fetchScoreViewModel.fetchState.collectAsState()
-
-    // Week Schedule State
     val weekScheduleState by fetchWeekScheduleViewModel.state.collectAsState()
 
-    // Get today's date in the correct format
-    val today = remember { Calendar.getInstance() }
-    val dateFormat = remember { SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()) }
-    val weekStart = remember {
-        val cal = Calendar.getInstance()
-        cal.time = today.time
-        while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
-            cal.add(Calendar.DATE, -1)
-        }
-        cal.time
-    }
-    val weekRange = remember(weekStart) {
-        val start = Calendar.getInstance().apply { time = weekStart }
-        val end = Calendar.getInstance().apply {
-            time = weekStart
-            add(Calendar.DAY_OF_YEAR, 6)
-        }
-        "${dateFormat.format(start.time)}-${dateFormat.format(end.time)}"
-    }
-    val todayDateString = remember { SimpleDateFormat("dd/MM/yyyy", Locale("vi")).format(today.time) }
+    val isRefreshing = remember { mutableStateOf(false) }
 
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key1 = Unit) {
         fetchInfoViewModel.fetchStudentIfNeeded(sessionId)
         fetchScoreViewModel.fetchScore(sessionId)
-        fetchWeekScheduleViewModel.fetchWeekSchedule(sessionId, weekRange)
+        fetchWeekScheduleViewModel.fetchWeekSchedule(sessionId, getWeekRange())
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
+
+
+    // Hàm làm mới dữ liệu
+    fun refreshData() {
+        isRefreshing.value = true
+        fetchInfoViewModel.fetchStudentIfNeeded(sessionId)
+        fetchScoreViewModel.fetchScore(sessionId)
+        fetchWeekScheduleViewModel.fetchWeekSchedule(sessionId, getWeekRange())
+        isRefreshing.value = false
+    }
+
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(isRefreshing.value),
+        onRefresh = { refreshData() }
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
+                .background(backgroundColor)
         ) {
-            // Header section với thông tin sinh viên và GPA
-            ProfileHeaderSection(fetchState, fetchScoreState, primaryColor, secondaryColor)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Thông báo quan trọng
-            ImportantNoticesSection()
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Các tính năng chính
-            FeaturesSection(navController, context)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Thời khóa biểu hôm nay
-            TodayScheduleSection(weekScheduleState = weekScheduleState, todayDateString = todayDateString, navController)
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+            ) {
+                ProfileHeaderSection(fetchState, fetchScoreState, primaryColor, secondaryColor)
+                Spacer(modifier = Modifier.height(16.dp))
+                ImportantNoticesSection()
+                Spacer(modifier = Modifier.height(16.dp))
+                FeaturesSection(navController, context)
+                Spacer(modifier = Modifier.height(16.dp))
+                TodayScheduleSection(weekScheduleState, getTodayDateString(), navController)
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 }
+
+
+// Hàm hỗ trợ tính toán ngày
+private fun getWeekRange(): String {
+    val today = Calendar.getInstance()
+    val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val weekStart = Calendar.getInstance().apply {
+        time = today.time
+        while (get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+            add(Calendar.DATE, -1)
+        }
+    }
+    val weekEnd = Calendar.getInstance().apply {
+        time = weekStart.time
+        add(Calendar.DAY_OF_YEAR, 6)
+    }
+    return "${dateFormat.format(weekStart.time)}-${dateFormat.format(weekEnd.time)}"
+}
+
+private fun getTodayDateString(): String {
+    return SimpleDateFormat("dd/MM/yyyy", Locale("vi")).format(Calendar.getInstance().time)
+}
+
+
+
 
 @Composable
 fun ProfileHeaderSection(

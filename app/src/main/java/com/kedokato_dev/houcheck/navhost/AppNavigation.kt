@@ -37,7 +37,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kedokato_dev.houcheck.ui.LoginScreen
+import com.kedokato_dev.houcheck.ui.components.calender.CalenderComponent
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
+import com.kedokato_dev.houcheck.ui.view.calender.calenderScreen
 import com.kedokato_dev.houcheck.ui.view.exam_schedule.ExamScheduleScreen
 import com.kedokato_dev.houcheck.ui.view.feedback.FeedbackScreen
 import com.kedokato_dev.houcheck.ui.view.home.HomeScreen
@@ -60,12 +62,12 @@ fun AppNavigation() {
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: "splash"
+    val currentRoute = navBackStackEntry?.destination?.route ?: "calendar"
     val appFullyStarted = remember { mutableStateOf(false) }
 
     val bottomBarVisible = currentRoute !in listOf(
         "training_score", "login", "studentInfo", "score", "list_score", "splash",
-        "exam_schedule", "week_schedule", "feedback"
+        "exam_schedule", "week_schedule", "feedback", "calender"
     ) && appFullyStarted.value
 
     Scaffold(
@@ -140,6 +142,9 @@ fun AppNavigation(navController: NavHostController) {
                 composable("feedback") {
                     appFullyStarted.value = true
                     FeedbackScreen(navController)
+                }
+                composable("calendar") {
+                    CalenderComponent()
                 }
             }
         }
