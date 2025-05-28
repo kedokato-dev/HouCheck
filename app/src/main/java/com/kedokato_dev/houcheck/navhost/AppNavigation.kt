@@ -37,9 +37,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kedokato_dev.houcheck.ui.LoginScreen
-import com.kedokato_dev.houcheck.ui.components.calender.CalenderComponent
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
-import com.kedokato_dev.houcheck.ui.view.calender.calenderScreen
 import com.kedokato_dev.houcheck.ui.view.exam_schedule.ExamScheduleScreen
 import com.kedokato_dev.houcheck.ui.view.feedback.FeedbackScreen
 import com.kedokato_dev.houcheck.ui.view.home.HomeScreen
@@ -142,9 +140,6 @@ fun AppNavigation(navController: NavHostController) {
                 composable("feedback") {
                     appFullyStarted.value = true
                     FeedbackScreen(navController)
-                }
-                composable("calendar") {
-                    CalenderComponent()
                 }
             }
         }

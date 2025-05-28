@@ -8,5 +8,6 @@ import retrofit2.http.Query
 interface ExamScheduleService {
     @GET("/api/exam-schedule")
     suspend fun fetchExamSchedule(@Query("sessionId") sessionId: String): Response<ExamScheduleResponse>
-
 }
+
+

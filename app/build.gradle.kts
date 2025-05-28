@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -11,12 +14,22 @@ android {
     namespace = "com.kedokato_dev.houcheck"
     compileSdk = 35
 
+    val secretsProperties =  Properties()
+    val secretsFile = File(rootDir, "secrets.properties")
+    if (secretsFile.exists() && secretsFile.isFile) {
+        secretsProperties.load(FileInputStream(secretsFile))
+    }
+
     defaultConfig {
         applicationId = "com.kedokato_dev.houcheck"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
-        versionName = "2.0.0-beta"
+        versionName =  secretsProperties.getProperty("VERSION")
+        buildConfigField("String", "BASE_URL_API", secretsProperties.getProperty("BASE_URL_API"))
+        buildConfigField("String", "UP_LOAD_URL_API", secretsProperties.getProperty("UP_LOAD_URL_API"))
+        buildConfigField("String", "VERSION", "\"${secretsProperties.getProperty("VERSION")}\"")
+
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -30,6 +43,12 @@ android {
             )
         }
     }
+
+    buildFeatures{
+        buildConfig = true
+        resValues = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

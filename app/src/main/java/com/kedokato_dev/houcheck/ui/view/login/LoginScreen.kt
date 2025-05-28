@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.kedokato_dev.houcheck.BuildConfig
 import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.local.dao.AppDatabase
 import com.kedokato_dev.houcheck.local.entity.AccountEntity
@@ -285,7 +286,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(text = stringResource(R.string.version_app) , fontSize = 12.sp, color = Color.Gray)
+                    Text(text = BuildConfig.VERSION , fontSize = 12.sp, color = Color.Gray)
                 }
             }
 
