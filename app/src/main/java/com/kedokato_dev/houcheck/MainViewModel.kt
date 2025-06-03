@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel  @Inject constructor(): ViewModel() {
-    var currentTheme by mutableStateOf(ThemeMode.ThemeData.System)
+    var currentTheme by mutableStateOf(ThemeMode.getThemeMode())
         private set
     var currentThemeColor by mutableStateOf(AppColors.getThemeColor())
         private set
