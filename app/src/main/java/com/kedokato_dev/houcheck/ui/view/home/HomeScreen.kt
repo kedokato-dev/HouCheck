@@ -68,6 +68,7 @@ import com.kedokato_dev.houcheck.network.model.ScheduleResponse
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.HouCheckTheme
+import com.kedokato_dev.houcheck.ui.theme.appTheme.ThemeMode
 import com.kedokato_dev.houcheck.ui.theme.backgroundColor
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 import com.kedokato_dev.houcheck.ui.theme.secondaryColor

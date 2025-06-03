@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,8 +37,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.kedokato_dev.houcheck.MainViewModel
 import com.kedokato_dev.houcheck.ui.LoginScreen
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
+import com.kedokato_dev.houcheck.ui.theme.appTheme.ThemeMode
 import com.kedokato_dev.houcheck.ui.view.exam_schedule.ExamScheduleScreen
 import com.kedokato_dev.houcheck.ui.view.feedback.FeedbackScreen
 import com.kedokato_dev.houcheck.ui.view.home.HomeScreen
@@ -51,14 +54,14 @@ import com.kedokato_dev.houcheck.ui.view.week_schedule.ScheduleScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppNavigation() {
+fun AppNavigation(viewModel: MainViewModel) {
     val navController = rememberNavController()
-    AppNavigation(navController)
+    AppNavigation(navController,viewModel)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(navController: NavHostController,viewModel: MainViewModel) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: "calendar"
     val appFullyStarted = remember { mutableStateOf(false) }
@@ -120,7 +123,7 @@ fun AppNavigation(navController: NavHostController) {
                 }
                 composable("settings") {
                     appFullyStarted.value = true
-                    SettingScreen(navController)
+                    SettingScreen(navController,viewModel)
                 }
                 composable("training_score") {
                     TrainingScoreScreen(navController)
