@@ -1,6 +1,7 @@
 package com.kedokato_dev.houcheck.ui.view.settings
 
-import android.widget.Toast
+import ColorPickerDialog
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -29,16 +35,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import colorOptionLists
+import com.kedokato_dev.houcheck.MainViewModel
 import com.kedokato_dev.houcheck.R
+import com.kedokato_dev.houcheck.ui.theme.appTheme.ThemeMode
+import com.kedokato_dev.houcheck.ui.theme.colorTheme.AppColors
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingScreen(navHostController: NavHostController) {
+fun SettingScreen(navHostController: NavHostController,viewModel: MainViewModel? = null) {
 
     val context = LocalContext.current
-
-
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showThemeColorDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,9 +59,6 @@ fun SettingScreen(navHostController: NavHostController) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = primaryColor,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
                 )
             )
         }
@@ -60,20 +67,20 @@ fun SettingScreen(navHostController: NavHostController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color.White)
                 .padding(16.dp)
 
         ) {
             val settings = listOf(
-                SettingItem("Đăng xuất", icon = painterResource(id = R.drawable.logout)  ),
-                SettingItem("Dark Mode", icon = painterResource(id = R.drawable.dark_mode)  ),
-                SettingItem("Gửi ý kiến cải thiện app", icon = painterResource(id = R.drawable.feedback)  )
+                SettingItem(1,"Đăng xuất", icon = painterResource(id = R.drawable.logout)  ),
+                SettingItem(2,"Theme Mode ( Dark, Light )", icon = painterResource(id = R.drawable.dark_mode)  ),
+                SettingItem(3,"Theme Color", icon = painterResource(id = R.drawable.ic_custom_color)  ),
+                SettingItem(4,"Gửi ý kiến cải thiện app", icon = painterResource(id = R.drawable.feedback)  )
             )
 
             settings.forEach { item ->
                 SettingItemRow(item = item, onClick = {
-                    when (item.title) {
-                        "Đăng xuất" -> {
+                    when (item.id) {
+                        1 -> {
                             navHostController.navigate("login") {
                                // khong cho phep quay lai
                                 popUpTo("login") {
@@ -82,11 +89,13 @@ fun SettingScreen(navHostController: NavHostController) {
                                 launchSingleTop = true
                             }
                         }
-                        "Dark Mode" -> {
-                            Toast.makeText(context, "Chưa có chức năng này", Toast.LENGTH_SHORT).show()
+                        2 -> {
+                            showThemeDialog = true
                         }
-
-                        "Gửi ý kiến cải thiện app" -> {
+                        3 -> {
+                            showThemeColorDialog = true
+                        }
+                       4 -> {
                             navHostController.navigate("feedback")
                         }
                     }
@@ -95,6 +104,31 @@ fun SettingScreen(navHostController: NavHostController) {
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
         }
+    }
+    if(showThemeDialog) {
+        ThemeMode.ThemePickerDialog(
+            viewModel?.currentTheme ?: ThemeMode.ThemeData.System,
+            onDismiss = {
+                showThemeDialog = false
+            }, onThemeSelected = {
+                ThemeMode.setThemeMode(it)
+                viewModel?.setTheme(it)
+            }
+        )
+    }
+    if (showThemeColorDialog) {
+        ColorPickerDialog(
+            currentColor = viewModel?.currentThemeColor ?: AppColors.Blue,
+            onDismiss = { showThemeColorDialog = false },
+            onReset = {
+                AppColors.setThemeColor(-1)
+                viewModel?.setThemeColor(null)
+            },
+            onColorSelected = {
+                AppColors.setThemeColor(colorOptionLists.indexOf(it))
+                viewModel?.setThemeColor(it)
+            }
+        )
     }
 }
 
@@ -123,6 +157,7 @@ fun SettingItemRow(item: SettingItem, onClick: () -> Unit) {
 }
 
 data class  SettingItem(
+    val id: Int,
     val title: String,
     val icon: Painter
 )

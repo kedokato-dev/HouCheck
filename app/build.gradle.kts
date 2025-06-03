@@ -62,6 +62,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.mmkv)
 
     // Navigation
     implementation(libs.navigation.compose)
