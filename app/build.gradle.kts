@@ -69,7 +69,8 @@ dependencies {
 
     // Room
     implementation(libs.room.runtime)
-    implementation(libs.room.ktx) // <== cái này là cái xử lý suspend
+    implementation(libs.room.ktx)
+    implementation(libs.perf.plugin) // <== cái này là cái xử lý suspend
     kapt(libs.room.compiler)
 
 

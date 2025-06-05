@@ -45,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -79,9 +78,7 @@ fun LoginScreen(navHostController: NavHostController) {
     }
 
     val authViewModel: AuthViewModel = hiltViewModel()
-
     val accountViewModel: AccountViewModel = hiltViewModel()
-
     val loginState by authViewModel.loginState.collectAsState()
 
     var username by remember { mutableStateOf("") }
@@ -100,6 +97,88 @@ fun LoginScreen(navHostController: NavHostController) {
         }
     }
 
+    LoginScreenContent(
+        username = username,
+        password = password,
+        passwordVisible = passwordVisible,
+        rememberLogin = rememberLogin,
+        onUsernameChange = { username = it },
+        onPasswordChange = { password = it },
+        onPasswordVisibilityToggle = { passwordVisible = !passwordVisible },
+        onRememberLoginChange = { rememberLogin = it },
+        isLoading = loginState is LoginState.Loading,
+        onLoginClick = {
+            // Save credentials if remember login is checked
+            if (rememberLogin) {
+                sharedPreferences.edit()
+                    .putBoolean("remember_login", true)
+                    .putString("saved_username", username)
+                    .putString("saved_password", password)
+                    .apply()
+            } else {
+                sharedPreferences.edit()
+                    .putBoolean("remember_login", false)
+                    .remove("saved_username")
+                    .remove("saved_password")
+                    .apply()
+            }
+
+            authViewModel.login(username, password)
+
+        }
+    )
+
+    LaunchedEffect(loginState) {
+        when (loginState) {
+            is LoginState.Success -> {
+                withContext(Dispatchers.IO) {
+
+                    sharedPreferences.edit()
+                        .putString("student_id", username)
+                        .putString("password", password)
+                        .apply()
+
+                    val exists = accountViewModel.checkAccountExist(username)
+                    if (!exists) {
+                        AppDatabase.buildDatabase(context).clearAllTables()
+                        accountViewModel.insertAccount(
+                            AccountEntity(0, username, password)
+                        )
+                    }
+                    if (accountViewModel.getAllAccounts() == null) {
+                        accountViewModel.insertAccount(
+                            AccountEntity(0, username, password)
+                        )
+                    }
+                }
+                navHostController.navigate("home")
+            }
+            is LoginState.Error -> {
+                Toast.makeText(
+                    context,
+                    "Lỗi đăng nhập: ${(loginState as LoginState.Error).message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            else -> { }
+        }
+    }
+}
+
+// Add this new function for previewing the UI without dependencies
+@Composable
+fun LoginScreenContent(
+    username: String = "",
+    password: String = "",
+    passwordVisible: Boolean = false,
+    rememberLogin: Boolean = false,
+    onUsernameChange: (String) -> Unit = {},
+    onPasswordChange: (String) -> Unit = {},
+    onPasswordVisibilityToggle: () -> Unit = {},
+    onRememberLoginChange: (Boolean) -> Unit = {},
+    onLoginClick: () -> Unit = {},
+    isLoading: Boolean = false
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -164,7 +243,7 @@ fun LoginScreen(navHostController: NavHostController) {
 
                     OutlinedTextField(
                         value = username,
-                        onValueChange = { username = it },
+                        onValueChange = onUsernameChange,
                         label = { Text("Mã sinh viên") },
                         leadingIcon = {
                             Icon(
@@ -186,7 +265,7 @@ fun LoginScreen(navHostController: NavHostController) {
                     // Password Field
                     OutlinedTextField(
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = onPasswordChange,
                         label = { Text("Mật khẩu") },
                         leadingIcon = {
                             Icon(
@@ -196,7 +275,7 @@ fun LoginScreen(navHostController: NavHostController) {
                             )
                         },
                         trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            IconButton(onClick = onPasswordVisibilityToggle) {
                                 Icon(
                                     painter = painterResource(
                                         id = if (passwordVisible) R.drawable.ic_visibility
@@ -225,7 +304,7 @@ fun LoginScreen(navHostController: NavHostController) {
                     ) {
                         Checkbox(
                             checked = rememberLogin,
-                            onCheckedChange = { rememberLogin = it },
+                            onCheckedChange = onRememberLoginChange,
                             colors = CheckboxDefaults.colors(
                                 checkedColor = HNOUDarkBlue,
                                 uncheckedColor = Color.Gray
@@ -242,25 +321,7 @@ fun LoginScreen(navHostController: NavHostController) {
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
-                        onClick = {
-                            // Save credentials if remember login is checked
-                            if (rememberLogin) {
-                                sharedPreferences.edit()
-                                    .putBoolean("remember_login", true)
-                                    .putString("saved_username", username)
-                                    .putString("saved_password", password)
-                                    .apply()
-                            } else {
-                                sharedPreferences.edit()
-                                    .putBoolean("remember_login", false)
-                                    .remove("saved_username")
-                                    .remove("saved_password")
-                                    .apply()
-                            }
-
-                            authViewModel.login(username, password)
-
-                        },
+                        onClick = onLoginClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -269,7 +330,7 @@ fun LoginScreen(navHostController: NavHostController) {
                             containerColor = HNOUDarkBlue
                         )
                     ) {
-                        if (loginState is LoginState.Loading) {
+                        if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 color = Color.White,
@@ -300,47 +361,11 @@ fun LoginScreen(navHostController: NavHostController) {
                 modifier = Modifier.padding(horizontal = 32.dp)
             )
         }
-
-        LaunchedEffect(loginState) {
-            when (loginState) {
-                is LoginState.Success -> {
-                    withContext(Dispatchers.IO) {
-
-                        sharedPreferences.edit()
-                            .putString("student_id", username)
-                            .putString("password", password)
-                            .apply()
-
-                        val exists = accountViewModel.checkAccountExist(username)
-                        if (!exists) {
-                            AppDatabase.buildDatabase(context).clearAllTables()
-                            accountViewModel.insertAccount(
-                                AccountEntity(0, username, password)
-                            )
-                        }
-                        if (accountViewModel.getAllAccounts() == null) {
-                            accountViewModel.insertAccount(
-                                AccountEntity(0, username, password)
-                            )
-                        }
-                    }
-                    navHostController.navigate("home")
-                }
-                is LoginState.Error -> {
-                    Toast.makeText(
-                        context,
-                        "Lỗi đăng nhập: ${(loginState as LoginState.Error).message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                else -> { }
-            }
-        }
     }
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PreviewLoginScreen() {
-    LoginScreen(navHostController = rememberNavController())
+    LoginScreenContent()
 }

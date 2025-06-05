@@ -68,7 +68,6 @@ import com.kedokato_dev.houcheck.network.model.ScheduleResponse
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.theme.HouCheckTheme
-import com.kedokato_dev.houcheck.ui.theme.appTheme.ThemeMode
 import com.kedokato_dev.houcheck.ui.theme.backgroundColor
 import com.kedokato_dev.houcheck.ui.theme.primaryColor
 import com.kedokato_dev.houcheck.ui.theme.secondaryColor
@@ -165,8 +164,6 @@ private fun getWeekRange(): String {
 private fun getTodayDateString(): String {
     return SimpleDateFormat("dd/MM/yyyy", Locale("vi")).format(Calendar.getInstance().time)
 }
-
-
 
 
 @Composable
@@ -286,6 +283,7 @@ fun ProfileHeaderSection(
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
+
                         is FetchState.Loading -> {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
@@ -293,6 +291,7 @@ fun ProfileHeaderSection(
                                 strokeWidth = 2.dp
                             )
                         }
+
                         is FetchState.Error -> {
                             Text(
                                 text = "Lỗi tải thông tin",
@@ -300,6 +299,7 @@ fun ProfileHeaderSection(
                                 color = Color.Red
                             )
                         }
+
                         else -> {
                             Text(
                                 text = "Chưa có thông tin",
@@ -351,12 +351,14 @@ fun ProfileHeaderSection(
                                     )
                                 }
                             }
+
                             is FetchScoreState.Loading -> {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp
                                 )
                             }
+
                             else -> {
                                 Text(
                                     text = "N/A",
@@ -485,6 +487,7 @@ fun FeaturesSection(navController: NavHostController, context: Context) {
                             "Chức năng đang phát triển",
                             Toast.LENGTH_SHORT
                         ).show()
+
                         4 -> navController.navigate("exam_schedule")
                         5 -> navController.navigate("training_score")
                         6, 7 -> Toast.makeText(
@@ -543,7 +546,11 @@ fun EnhancedFeatureGridItem(item: FeatureItem, onClick: () -> Unit = {}) {
 // In HomeScreen.kt
 
 @Composable
-fun TodayScheduleSection(weekScheduleState: UiState<ScheduleResponse>, todayDateString: String, navHostController: NavHostController) {
+fun TodayScheduleSection(
+    weekScheduleState: UiState<ScheduleResponse>,
+    todayDateString: String,
+    navHostController: NavHostController
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -585,6 +592,7 @@ fun TodayScheduleSection(weekScheduleState: UiState<ScheduleResponse>, todayDate
                     }
                 }
             }
+
             is UiState.Error -> {
                 Card(
                     modifier = Modifier
@@ -598,13 +606,15 @@ fun TodayScheduleSection(weekScheduleState: UiState<ScheduleResponse>, todayDate
                     }
                 }
             }
+
             is UiState.Success -> {
                 val schedule = weekScheduleState.data
                 //Find the correct day
-                val todaySchedule = schedule.weekDays.find { it.contains(todayDateString) }?.let { day ->
-                    val dayKey = day.dropLast(12)
-                    schedule.byDays[dayKey]
-                }
+                val todaySchedule =
+                    schedule.weekDays.find { it.contains(todayDateString) }?.let { day ->
+                        val dayKey = day.dropLast(12)
+                        schedule.byDays[dayKey]
+                    }
 
                 if (todaySchedule?.classes?.isNotEmpty() == true) {
                     Card(
@@ -621,7 +631,9 @@ fun TodayScheduleSection(weekScheduleState: UiState<ScheduleResponse>, todayDate
                                     session = classInfo.timeSlot,
                                     subject = classInfo.subject,
                                     room = classInfo.room,
-                                    backgroundColor = getClassStatusColor(classInfo.session).copy(alpha = 0.1f) // You'll need to define this function or adapt it
+                                    backgroundColor = getClassStatusColor(classInfo.session).copy(
+                                        alpha = 0.1f
+                                    ) // You'll need to define this function or adapt it
                                 )
                                 if (todaySchedule.classes.indexOf(classInfo) < todaySchedule.classes.size - 1) {
                                     Divider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -638,12 +650,16 @@ fun TodayScheduleSection(weekScheduleState: UiState<ScheduleResponse>, todayDate
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier.padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text("Không có lịch học hôm nay")
                         }
                     }
                 }
             }
+
             else -> {
                 Card(
                     modifier = Modifier
@@ -671,7 +687,13 @@ private fun getClassStatusColor(session: String): Color {
 }
 
 @Composable
-fun ScheduleItem(status: String,session: String, subject: String, room: String, backgroundColor: Color) {
+fun ScheduleItem(
+    status: String,
+    session: String,
+    subject: String,
+    room: String,
+    backgroundColor: Color
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -749,7 +771,6 @@ data class FeatureItem(
 @Composable
 fun HomeScreenPreview() {
     HouCheckTheme {
-        val navController = NavHostController(context = LocalContext.current)
-        HomeScreen(navController)
+        HomeScreen(navController = NavHostController(LocalContext.current))
     }
 }

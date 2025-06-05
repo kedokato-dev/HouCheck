@@ -31,7 +31,8 @@ calendar-core = "2.5.3"
 
 accompanist = "0.34.0"
 
-compose-foundation = "1.6.1" # hoặc mới hơn
+compose-foundation = "1.6.1"
+perfPlugin = "1.4.2" # hoặc mới hơn
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -88,6 +89,7 @@ accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiper
 
 
 compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose-foundation" }
+perf-plugin = { group = "com.google.firebase", name = "perf-plugin", version.ref = "perfPlugin" }
 
 
 [plugins]

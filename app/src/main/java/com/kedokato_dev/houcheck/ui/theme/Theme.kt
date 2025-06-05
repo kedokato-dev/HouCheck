@@ -10,7 +10,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.kedokato_dev.houcheck.ui.theme.appTheme.ThemeMode
-import com.kedokato_dev.houcheck.ui.theme.colorTheme.AppColors
 import com.kedokato_dev.houcheck.ui.theme.colorTheme.ThemeColors
 import com.kedokato_dev.houcheck.ui.theme.colorTheme.toColorScheme
 
