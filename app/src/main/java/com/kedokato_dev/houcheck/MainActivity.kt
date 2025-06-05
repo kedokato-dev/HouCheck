@@ -29,8 +29,8 @@ class MainActivity : ComponentActivity() {
             val viewModel: MainViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
             val theme = viewModel.currentTheme
             val themeColor = viewModel.currentThemeColor
-            Log.i(packageName,"ThemeUsed: ${theme.name}, ThemeColorUsed: $themeColor")
-            HouCheckTheme(themeSelected = theme,themeColor = themeColor) {
+//            Log.i(packageName,"ThemeUsed: ${theme.name}, ThemeColorUsed: $themeColor")
+            HouCheckTheme() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

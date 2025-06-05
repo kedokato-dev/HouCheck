@@ -1,6 +1,5 @@
 package com.kedokato_dev.houcheck.ui.view.home
 
-
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -21,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,6 +34,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,14 +55,15 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.kedokato_dev.houcheck.R
@@ -77,47 +80,72 @@ import com.kedokato_dev.houcheck.ui.view.profile.InfoStudentViewModel
 import com.kedokato_dev.houcheck.ui.view.score.FetchScoreState
 import com.kedokato_dev.houcheck.ui.view.score.FetchScoreViewModel
 import com.kedokato_dev.houcheck.ui.view.week_schedule.WeekScheduleViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+// HomeScreenContainer để quản lý ViewModel và truyền vào HomeScreen
 @Composable
-fun HomeScreen(navController: NavHostController) {
-    val context = LocalContext.current
-    val scrollState = rememberScrollState()
-
+fun HomeScreenContainer(navController: NavHostController) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val fetchInfoViewModel: InfoStudentViewModel = hiltViewModel()
     val fetchScoreViewModel: FetchScoreViewModel = hiltViewModel()
     val fetchWeekScheduleViewModel: WeekScheduleViewModel = hiltViewModel()
 
-    val sessionId = authViewModel.getSessionId().toString()
+    HomeScreen(
+        navController = navController,
+        authViewModel = authViewModel,
+        fetchInfoViewModel = fetchInfoViewModel,
+        fetchScoreViewModel = fetchScoreViewModel,
+        fetchWeekScheduleViewModel = fetchWeekScheduleViewModel
+    )
+}
+
+@Composable
+fun HomeScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    fetchInfoViewModel: InfoStudentViewModel,
+    fetchScoreViewModel: FetchScoreViewModel,
+    fetchWeekScheduleViewModel: WeekScheduleViewModel
+) {
+    val context = LocalContext.current
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val sessionId = authViewModel.getSessionId() ?: ""
     val fetchState by fetchInfoViewModel.fetchState.collectAsState()
     val fetchScoreState by fetchScoreViewModel.fetchState.collectAsState()
     val weekScheduleState by fetchWeekScheduleViewModel.state.collectAsState()
 
-    val isRefreshing = remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
 
-
-    LaunchedEffect(key1 = Unit) {
-        fetchInfoViewModel.fetchStudentIfNeeded(sessionId)
-        fetchScoreViewModel.fetchScore(sessionId)
-        fetchWeekScheduleViewModel.fetchWeekSchedule(sessionId, getWeekRange())
+    // LaunchedEffect với key phù hợp để tránh fetch dữ liệu không cần thiết
+    LaunchedEffect(key1 = sessionId) {
+        if (sessionId.isNotEmpty()) {
+            fetchInfoViewModel.fetchStudentIfNeeded(sessionId)
+            fetchScoreViewModel.fetchScore(sessionId)
+            fetchWeekScheduleViewModel.fetchWeekSchedule(sessionId, getWeekRange())
+        }
     }
 
-
-
-    // Hàm làm mới dữ liệu
+    // Hàm làm mới dữ liệu với coroutines scope
     fun refreshData() {
-        isRefreshing.value = true
-        fetchInfoViewModel.fetchStudentIfNeeded(sessionId)
-        fetchScoreViewModel.fetchScore(sessionId)
-        fetchWeekScheduleViewModel.fetchWeekSchedule(sessionId, getWeekRange())
-        isRefreshing.value = false
+        coroutineScope.launch {
+            isRefreshing = true
+            try {
+                fetchInfoViewModel.fetchStudentIfNeeded(sessionId)
+                fetchScoreViewModel.fetchScore(sessionId)
+                fetchWeekScheduleViewModel.fetchWeekSchedule(sessionId, getWeekRange())
+            } finally {
+                isRefreshing = false
+            }
+        }
     }
 
     SwipeRefresh(
-        state = rememberSwipeRefreshState(isRefreshing.value),
+        state = rememberSwipeRefreshState(isRefreshing),
         onRefresh = { refreshData() }
     ) {
         Box(
@@ -129,10 +157,12 @@ fun HomeScreen(navController: NavHostController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(16.dp)
             ) {
-                ProfileHeaderSection(fetchState, fetchScoreState, primaryColor, secondaryColor)
+                ProfileHeaderSection(fetchState, fetchScoreState, primaryColor, secondaryColor, navController)
                 Spacer(modifier = Modifier.height(16.dp))
-                ImportantNoticesSection()
+                ImportantNoticesSection(navController)
                 Spacer(modifier = Modifier.height(16.dp))
                 FeaturesSection(navController, context)
                 Spacer(modifier = Modifier.height(16.dp))
@@ -142,7 +172,6 @@ fun HomeScreen(navController: NavHostController) {
         }
     }
 }
-
 
 // Hàm hỗ trợ tính toán ngày
 private fun getWeekRange(): String {
@@ -165,13 +194,13 @@ private fun getTodayDateString(): String {
     return SimpleDateFormat("dd/MM/yyyy", Locale("vi")).format(Calendar.getInstance().time)
 }
 
-
 @Composable
 fun ProfileHeaderSection(
     fetchState: FetchState,
     fetchScoreState: FetchScoreState,
     primaryColor: Color,
-    secondaryColor: Color
+    secondaryColor: Color,
+    navController: NavHostController
 ) {
     Box(
         modifier = Modifier
@@ -198,8 +227,8 @@ fun ProfileHeaderSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "My HOU",
-                fontSize = 20.sp,
+                text = stringResource(R.string.app_title),
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
@@ -208,15 +237,17 @@ fun ProfileHeaderSection(
                 IconButton(onClick = { /* TODO: Navigate to notifications */ }) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
-                        contentDescription = "Thông báo",
+                        contentDescription = stringResource(R.string.notifications),
                         tint = Color.White
                     )
                 }
 
-                IconButton(onClick = { /* TODO: Navigate to settings */ }) {
+                IconButton(onClick = {
+                    navController.navigate("settings")
+                }) {
                     Icon(
                         imageVector = Icons.Rounded.Settings,
-                        contentDescription = "Cài đặt",
+                        contentDescription = stringResource(R.string.settings),
                         tint = Color.White
                     )
                 }
@@ -232,7 +263,9 @@ fun ProfileHeaderSection(
                 .align(Alignment.BottomCenter)
                 .shadow(8.dp, RoundedCornerShape(16.dp)),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.background
+            ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Row(
@@ -243,7 +276,7 @@ fun ProfileHeaderSection(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.no_avatar),
-                    contentDescription = "Avatar",
+                    contentDescription = stringResource(R.string.avatar),
                     modifier = Modifier
                         .size(70.dp)
                         .clip(CircleShape)
@@ -261,112 +294,47 @@ fun ProfileHeaderSection(
                             val student = fetchState.student
                             Text(
                                 text = student.studentName.toString(),
-                                fontSize = 18.sp,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black
+                                color = MaterialTheme.colorScheme.onBackground
                             )
 
                             Text(
-                                text = "MSV: ${student.studentId}",
-                                fontSize = 14.sp,
-                                color = Color.Gray
+                                text = stringResource(R.string.student_id_format, student.studentId ?: ""),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                style = MaterialTheme.typography.bodyLarge,
                             )
 
-                            Spacer(modifier = Modifier.height(4.dp))
-
                             Text(
-//                                text = "Ngành: ${student.studentMajor ?: "Chưa có thông tin"}",
-                                text = "Ngành: CNTT",
-                                fontSize = 14.sp,
-                                color = Color.Gray,
-                                maxLines = 1,
+                                text = stringResource(R.string.major),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                style = MaterialTheme.typography.bodyLarge,
                                 overflow = TextOverflow.Ellipsis
                             )
+
+                            ProfileScoreInfo(fetchScoreState, primaryColor)
                         }
 
                         is FetchState.Loading -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
+                            LoadingState(
+                                size = 24.dp,
                                 color = primaryColor,
                                 strokeWidth = 2.dp
                             )
                         }
 
                         is FetchState.Error -> {
-                            Text(
-                                text = "Lỗi tải thông tin",
-                                fontSize = 16.sp,
-                                color = Color.Red
+                            ErrorState(
+                                message = stringResource(R.string.error_loading_info)
                             )
                         }
 
                         else -> {
                             Text(
-                                text = "Chưa có thông tin",
-                                fontSize = 16.sp,
-                                color = Color.Gray
+                                text = stringResource(R.string.no_info),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        }
-                    }
-                }
-
-                // GPA Section
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = primaryColor.copy(alpha = 0.1f)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "GPA",
-                            fontSize = 12.sp,
-                            color = primaryColor
-                        )
-
-                        when (fetchScoreState) {
-                            is FetchScoreState.Success -> {
-                                val score = fetchScoreState.scores
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "${score.gpa4}",
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = primaryColor
-                                    )
-                                    Text(
-                                        text = "/4",
-                                        fontSize = 14.sp,
-                                        color = primaryColor
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "🔥",
-                                        fontSize = 16.sp
-                                    )
-                                }
-                            }
-
-                            is FetchScoreState.Loading -> {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp
-                                )
-                            }
-
-                            else -> {
-                                Text(
-                                    text = "N/A",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = primaryColor
-                                )
-                            }
                         }
                     }
                 }
@@ -376,7 +344,40 @@ fun ProfileHeaderSection(
 }
 
 @Composable
-fun ImportantNoticesSection() {
+fun ProfileScoreInfo(
+    fetchScoreState: FetchScoreState,
+    primaryColor: Color
+) {
+    when(fetchScoreState) {
+        is FetchScoreState.Success -> {
+            val score = fetchScoreState.scores
+            Text(
+                text = stringResource(R.string.gpa_format, score.gpa4),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+
+        is FetchScoreState.Loading -> {
+            LoadingState(
+                size = 16.dp,
+                strokeWidth = 2.dp,
+                color = primaryColor
+            )
+        }
+
+        else -> {
+            Text(
+                text = stringResource(R.string.no_info),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun ImportantNoticesSection(navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -388,15 +389,17 @@ fun ImportantNoticesSection() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Thông báo quan trọng",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                text = stringResource(R.string.important_notices),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
-            TextButton(onClick = { /* TODO: Navigate to all notices */ }) {
+            TextButton(onClick = {
+                navController.navigate("notices")
+            }) {
                 Text(
-                    text = "Xem tất cả",
-                    color = Color(0xFF1565C0)
+                    text = stringResource(R.string.view_all),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -418,7 +421,7 @@ fun ImportantNoticesSection() {
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.newspaper_news_svgrepo_com),
-                    contentDescription = "Thông báo",
+                    contentDescription = stringResource(R.string.notice),
                     tint = Color(0xFFE65100),
                     modifier = Modifier.size(24.dp)
                 )
@@ -427,14 +430,14 @@ fun ImportantNoticesSection() {
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Lịch thi học kỳ 2 (2024-2025)",
+                        text = stringResource(R.string.exam_schedule_title),
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFE65100)
                     )
 
                     Text(
-                        text = "Lịch thi đã được cập nhật. Vui lòng kiểm tra thông tin!",
-                        fontSize = 14.sp,
+                        text = stringResource(R.string.exam_schedule_description),
+                        style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFFE65100)
                     )
                 }
@@ -451,48 +454,53 @@ fun FeaturesSection(navController: NavHostController, context: Context) {
             .padding(horizontal = 16.dp)
     ) {
         Text(
-            text = "Tiện ích",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
+            text = stringResource(R.string.utilities),
+            style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
         val features = listOf(
-            FeatureItem("Lịch học", R.drawable.calendar_date_schedule, Color(0xFF2196F3)),
-            FeatureItem("Điểm học tập", R.drawable.score_repo, Color(0xFF4CAF50)),
-            FeatureItem("Thông tin cá nhân", R.drawable.info, Color(0xFF9C27B0)),
-            FeatureItem("Học phí", R.drawable.pay, Color(0xFFFF9800)),
-            FeatureItem("Lịch thi", R.drawable.calendar_date_exem, Color(0xFFF44336)),
-            FeatureItem("Điểm rèn luyện", R.drawable.score_repo, Color(0xFF795548)),
-            FeatureItem("Tin tức", R.drawable.news, Color(0xFF607D8B)),
-            FeatureItem("Hỗ trợ", R.drawable.coffe_svgrepo_com, Color(0xFF009688)),
+            FeatureItem(stringResource(R.string.schedule), R.drawable.calendar_date_schedule, Color(0xFF2196F3)),
+            FeatureItem(stringResource(R.string.scores), R.drawable.score_repo, Color(0xFF4CAF50)),
+            FeatureItem(stringResource(R.string.personal_info), R.drawable.info, Color(0xFF9C27B0)),
+            FeatureItem(stringResource(R.string.tuition), R.drawable.pay, Color(0xFFFF9800)),
+            FeatureItem(stringResource(R.string.exam_schedule), R.drawable.calendar_date_exem, Color(0xFFF44336)),
+            FeatureItem(stringResource(R.string.training_score), R.drawable.score_repo, Color(0xFF795548)),
+            FeatureItem(stringResource(R.string.news), R.drawable.news, Color(0xFF607D8B)),
+            FeatureItem(stringResource(R.string.support), R.drawable.coffe_svgrepo_com, Color(0xFF009688)),
         )
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            contentPadding = PaddingValues(0.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.height(200.dp),
-            userScrollEnabled = false
-        ) {
-            items(features.size) { index ->
-                EnhancedFeatureGridItem(features[index]) {
-                    when (index) {
-                        0 -> navController.navigate("week_schedule")
-                        1 -> navController.navigate("score")
-                        2 -> navController.navigate("studentInfo")
-                        3 -> Toast.makeText(
-                            context,
-                            "Chức năng đang phát triển",
-                            Toast.LENGTH_SHORT
-                        ).show()
+        // Sử dụng size-based layout thay vì chiều cao cố định
+        FeatureGrid(features, navController, context)
+    }
+}
 
-                        4 -> navController.navigate("exam_schedule")
-                        5 -> navController.navigate("training_score")
-                        6, 7 -> Toast.makeText(
+@Composable
+fun FeatureGrid(
+    features: List<FeatureItem>,
+    navController: NavHostController,
+    context: Context
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(4),
+        contentPadding = PaddingValues(0.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        userScrollEnabled = false, // Disable scrolling since we're inside a scrollable Column
+        modifier = Modifier.height((features.size / 4 * 100).dp) // Dynamic height based on items
+    ) {
+        items(features) { feature ->
+            EnhancedFeatureGridItem(feature) {
+                when (feature.title) {
+                    context.getString(R.string.schedule) -> navController.navigate("week_schedule")
+                    context.getString(R.string.scores) -> navController.navigate("score")
+                    context.getString(R.string.personal_info) -> navController.navigate("studentInfo")
+                    context.getString(R.string.exam_schedule) -> navController.navigate("exam_schedule")
+                    context.getString(R.string.training_score) -> navController.navigate("training_score")
+                    else -> {
+                        Toast.makeText(
                             context,
-                            "Chức năng đang phát triển",
+                            context.getString(R.string.feature_in_development),
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -532,18 +540,15 @@ fun EnhancedFeatureGridItem(item: FeatureItem, onClick: () -> Unit = {}) {
 
         Text(
             text = item.title,
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
-            color = Color(0xFF333333),
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(64.dp)
         )
     }
 }
-
-// In HomeScreen.kt
 
 @Composable
 fun TodayScheduleSection(
@@ -562,127 +567,141 @@ fun TodayScheduleSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Lịch học hôm nay",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                text = stringResource(R.string.today_schedule),
+                style = MaterialTheme.typography.titleLarge
             )
 
             TextButton(onClick = {
                 navHostController.navigate("week_schedule")
             }) {
                 Text(
-                    text = "Xem tất cả",
-                    color = Color(0xFF1565C0)
+                    text = stringResource(R.string.view_all),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        // Schedule content based on the state
+        // Extract different states to separate composables
         when (weekScheduleState) {
-            is UiState.Loading -> {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = HNOULightBlue)
-                    }
-                }
-            }
-
-            is UiState.Error -> {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-                        Text("Error loading schedule")
-                    }
-                }
-            }
-
-            is UiState.Success -> {
-                val schedule = weekScheduleState.data
-                //Find the correct day
-                val todaySchedule =
-                    schedule.weekDays.find { it.contains(todayDateString) }?.let { day ->
-                        val dayKey = day.dropLast(12)
-                        schedule.byDays[dayKey]
-                    }
-
-                if (todaySchedule?.classes?.isNotEmpty() == true) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            todaySchedule.classes.forEach { classInfo ->
-                                ScheduleItem(
-                                    status = classInfo.session,
-                                    session = classInfo.timeSlot,
-                                    subject = classInfo.subject,
-                                    room = classInfo.room,
-                                    backgroundColor = getClassStatusColor(classInfo.session).copy(
-                                        alpha = 0.1f
-                                    ) // You'll need to define this function or adapt it
-                                )
-                                if (todaySchedule.classes.indexOf(classInfo) < todaySchedule.classes.size - 1) {
-                                    Divider(modifier = Modifier.padding(horizontal = 16.dp))
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    // Empty state
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("Không có lịch học hôm nay")
-                        }
-                    }
-                }
-            }
-
-            else -> {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Box(modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center) {
-                        Text("Không có dữ liệu")
-                    }
-                }
-            }
+            is UiState.Loading -> TodayScheduleLoadingState()
+            is UiState.Error -> TodayScheduleErrorState(weekScheduleState.message)
+            is UiState.Success -> TodayScheduleContent(weekScheduleState.data, todayDateString)
+            else -> TodayScheduleEmptyState()
         }
     }
 }
 
-// New function to get color based on class status
-private fun getClassStatusColor(session: String): Color {
-    return when {
-        session.contains("bù") -> Color(0xFF9C27B0)
-        session.contains("Nghỉ") -> Color(0xFFF44336)
-        else -> Color(0xFF4CAF50)
+@Composable
+fun TodayScheduleLoadingState() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+                .height(60.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            LoadingState(color = HNOULightBlue)
+        }
+    }
+}
+
+@Composable
+fun TodayScheduleErrorState(errorMessage: String?) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+                .height(60.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            ErrorState(message = errorMessage ?: stringResource(R.string.error_loading_schedule))
+        }
+    }
+}
+
+@Composable
+fun TodayScheduleEmptyState() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(16.dp)
+                .height(60.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.no_data),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+    }
+}
+
+@Composable
+fun TodayScheduleContent(schedule: ScheduleResponse, todayDateString: String) {
+    //Find the correct day
+    val todaySchedule =
+        schedule.weekDays.find { it.contains(todayDateString) }?.let { day ->
+            val dayKey = day.dropLast(12)
+            schedule.byDays[dayKey]
+        }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            if (todaySchedule?.classes?.isNotEmpty() == true) {
+                todaySchedule.classes.forEachIndexed { index, classInfo ->
+                    ScheduleItem(
+                        status = classInfo.session,
+                        session = classInfo.timeSlot,
+                        subject = classInfo.subject,
+                        room = classInfo.room,
+                        backgroundColor = getClassStatusColor(classInfo.session).copy(alpha = 0.1f)
+                    )
+
+                    if (index < todaySchedule.classes.size - 1) {
+                        Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_schedule_today),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -708,8 +727,9 @@ fun ScheduleItem(
         ) {
             Text(
                 text = session,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = backgroundColor.copy(alpha = 10f)
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
 
@@ -718,8 +738,12 @@ fun ScheduleItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = subject,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onBackground
+
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -727,7 +751,7 @@ fun ScheduleItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     painter = painterResource(id = R.drawable.status),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.status),
                     modifier = Modifier.size(16.dp),
                     tint = HNOULightBlue
                 )
@@ -736,15 +760,15 @@ fun ScheduleItem(
 
                 Text(
                     text = status,
-                    fontSize = 14.sp,
-                    color = Color.Gray
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Icon(
-                    painter = painterResource(id = R.drawable.room_key), // Thay thế bằng icon location
-                    contentDescription = null,
+                    painter = painterResource(id = R.drawable.room_key),
+                    contentDescription = stringResource(R.string.room),
                     modifier = Modifier.size(16.dp),
                     tint = HNOULightBlue
                 )
@@ -753,11 +777,20 @@ fun ScheduleItem(
 
                 Text(
                     text = room,
-                    fontSize = 14.sp,
-                    color = Color.Gray
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
+    }
+}
+
+// New function to get color based on class status
+private fun getClassStatusColor(session: String): Color {
+    return when {
+        session.contains("bù") -> Color(0xFF9C27B0)
+        session.contains("Nghỉ") -> Color(0xFFF44336)
+        else -> Color(0xFF4CAF50)
     }
 }
 
@@ -767,10 +800,47 @@ data class FeatureItem(
     val backgroundColor: Color
 )
 
-@Preview(showBackground = true, showSystemUi = true)
+// Thêm các component tái sử dụng
+@Composable
+fun LoadingState(
+    modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp = 24.dp,
+    color: Color = MaterialTheme.colorScheme.primary,
+    strokeWidth: androidx.compose.ui.unit.Dp = 2.dp
+) {
+    CircularProgressIndicator(
+        modifier = modifier.then(Modifier.size(size)),
+        color = color,
+        strokeWidth = strokeWidth
+    )
+}
+
+@Composable
+fun ErrorState(message: String) {
+    Text(
+        text = message,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.error
+    )
+}
+
+// Thêm Preview cho các thành phần chính
+@Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     HouCheckTheme {
-        HomeScreen(navController = NavHostController(LocalContext.current))
+        val navController = rememberNavController()
+        val authViewModel: AuthViewModel = hiltViewModel()
+        val fetchInfoViewModel: InfoStudentViewModel = hiltViewModel()
+        val fetchScoreViewModel: FetchScoreViewModel = hiltViewModel()
+        val fetchWeekScheduleViewModel: WeekScheduleViewModel = hiltViewModel()
+
+        HomeScreen(
+            navController = navController,
+            authViewModel = authViewModel,
+            fetchInfoViewModel = fetchInfoViewModel,
+            fetchScoreViewModel = fetchScoreViewModel,
+            fetchWeekScheduleViewModel = fetchWeekScheduleViewModel
+        )
     }
 }

@@ -44,6 +44,7 @@ import com.kedokato_dev.houcheck.ui.theme.appTheme.ThemeMode
 import com.kedokato_dev.houcheck.ui.view.exam_schedule.ExamScheduleScreen
 import com.kedokato_dev.houcheck.ui.view.feedback.FeedbackScreen
 import com.kedokato_dev.houcheck.ui.view.home.HomeScreen
+import com.kedokato_dev.houcheck.ui.view.home.HomeScreenContainer
 import com.kedokato_dev.houcheck.ui.view.profile.StudentInfoScreen
 import com.kedokato_dev.houcheck.ui.view.score.ScoreScreen
 import com.kedokato_dev.houcheck.ui.view.score_list.ListScoreScreen
@@ -116,7 +117,7 @@ fun AppNavigation(navController: NavHostController,viewModel: MainViewModel) {
                 }
                 composable("home") {
                     appFullyStarted.value = true
-                    HomeScreen(navController)
+                    HomeScreenContainer(navController)
                 }
                 composable("studentInfo") {
                     StudentInfoScreen(navController)

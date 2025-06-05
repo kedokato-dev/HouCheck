@@ -1,4 +1,46 @@
 <resources>
     <string name="app_name">MyHOU</string>
-    <string name="version_app">Version: 2.0.0 beta</string>
+
+    <string name="app_title">My HOU</string>
+
+    <!-- Common -->
+    <string name="view_all">Xem tất cả</string>
+    <string name="no_data">Không có dữ liệu</string>
+    <string name="feature_in_development">Chức năng đang phát triển</string>
+
+    <!-- Profile Section -->
+    <string name="avatar">Ảnh đại diện</string>
+    <string name="student_id_format">MSV: %1$s</string>
+    <string name="major">Ngành: CNTT</string>
+    <string name="gpa_format">GPA: %1$s</string>
+    <string name="no_info">Chưa có thông tin</string>
+    <string name="error_loading_info">Lỗi tải thông tin</string>
+
+    <!-- Notices Section -->
+    <string name="important_notices">Thông báo quan trọng</string>
+    <string name="notice">Thông báo</string>
+    <string name="exam_schedule_title">Lịch thi học kỳ 2 (2024-2025)</string>
+    <string name="exam_schedule_description">Lịch thi đã được cập nhật. Vui lòng kiểm tra thông tin!</string>
+
+    <!-- Features Section -->
+    <string name="utilities">Tiện ích</string>
+    <string name="schedule">Lịch học</string>
+    <string name="scores">Điểm học tập</string>
+    <string name="personal_info">Thông tin cá nhân</string>
+    <string name="tuition">Học phí</string>
+    <string name="exam_schedule">Lịch thi</string>
+    <string name="training_score">Điểm rèn luyện</string>
+    <string name="news">Tin tức</string>
+    <string name="support">Hỗ trợ</string>
+
+    <!-- Schedule Section -->
+    <string name="today_schedule">Lịch học hôm nay</string>
+    <string name="no_schedule_today">Không có lịch học hôm nay</string>
+    <string name="error_loading_schedule">Lỗi tải lịch học</string>
+    <string name="status">Trạng thái</string>
+    <string name="room">Phòng</string>
+
+    <!-- Settings -->
+    <string name="settings">Cài đặt</string>
+    <string name="notifications">Thông báo</string>
 </resources>
