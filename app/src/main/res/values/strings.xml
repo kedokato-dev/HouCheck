@@ -53,4 +53,22 @@
     <string name="slogan">Trợ lý học tập toàn diện của bạn</string>
     <string name="help">Liên hệ phòng đào tạo nếu bạn gặp vấn đề về đăng nhập</string>
     <string name="terms_of_use">Điều khoản sử dụng</string>
+
+    <!--  Student Info  -->
+    <string name="student_info">Thông tin cá nhân</string>
+    <string name="student_id">Mã sinh viên</string>
+    <string name="full_name">Họ và tên</string>
+    <string name="date_of_birth">Ngày sinh</string>
+    <string name="sex">Giới tính</string>
+    <string name="address">Quê nhà</string>
+    <string name="phone_number">Số điện thoại</string>
+    <string name="email">Email</string>
+    <string name="academic_year">Niên khóa: </string>
+    <string name="contact_information">Thông tin liên hệ</string>
+    <string name="address_info">Thông tin liên hệ</string>
+    <string name="phone_number_parent">Số điện thoại nhà</string>
+    <string name="address_parent">Nơi chôn rau cắt rốn</string>
+
+
+
 </resources>

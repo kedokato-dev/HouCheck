@@ -22,12 +22,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Phone
-import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -53,10 +55,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Vertices
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -80,21 +85,13 @@ fun StudentInfoScreen(navHostController: NavHostController) {
         context.getSharedPreferences("sessionId", Context.MODE_PRIVATE)
     }
 
-
-    val viewModel : InfoStudentViewModel = hiltViewModel()
-
+    val viewModel: InfoStudentViewModel = hiltViewModel()
     val authRepository = remember { AuthRepository(sharedPreferences) }
-
     val fetchState by viewModel.fetchState.collectAsState()
-
     val scrollState = rememberScrollState()
-
-
     LaunchedEffect(Unit) {
         viewModel.fetchStudentIfNeeded(authRepository.getSessionId().toString())
     }
-
-
 
     Scaffold(
         topBar = {
@@ -131,12 +128,13 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                 )
             )
         },
-        containerColor = backgroundColor
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background),
         ) {
             Column(
                 modifier = Modifier
@@ -148,10 +146,6 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                 // Header với phần thông tin cơ bản và nút xem lịch học
                 StudentHeaderCard(
                     fetchState = fetchState,
-                    onViewScheduleClick = {
-                        // Navigate to schedule screen
-                        navHostController.navigate("home")
-                    },
                     primaryColor = primaryColor,
                     secondaryColor = secondaryColor
                 )
@@ -168,13 +162,16 @@ fun StudentInfoScreen(navHostController: NavHostController) {
                             primaryColor = primaryColor
                         )
                     }
+
                     is FetchState.Loading -> {
                         LoadingStateSection(primaryColor = primaryColor)
                     }
+
                     is FetchState.Success -> {
                         val student = (fetchState as FetchState.Success).student
-                        StudentDetailsSection(student = student, accentColor = accentColor)
+                        StudentDetailsSection(student = student)
                     }
+
                     is FetchState.Error -> {
                         ErrorStateSection(
                             message = (fetchState as FetchState.Error).message,
@@ -193,7 +190,6 @@ fun StudentInfoScreen(navHostController: NavHostController) {
 @Composable
 private fun StudentHeaderCard(
     fetchState: FetchState,
-    onViewScheduleClick: () -> Unit,
     primaryColor: Color,
     secondaryColor: Color
 ) {
@@ -260,6 +256,7 @@ private fun StudentHeaderCard(
                                 textAlign = TextAlign.Center
                             )
                         }
+
                         else -> {
                             Text(
                                 "Thông tin sinh viên",
@@ -270,57 +267,25 @@ private fun StudentHeaderCard(
                                 textAlign = TextAlign.Center
                             )
                         }
+
+                        // Thông tin khóa học và học kỳ khi có dữ liệu
+
                     }
-                }
-            }
+                    if (fetchState is FetchState.Success) {
+                        val student = (fetchState as FetchState.Success).student
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround,
 
-            // Nút xem lịch học nổi bật
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                ElevatedButton(
-                    onClick = onViewScheduleClick,
-                    colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = secondaryColor,
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 2.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Info,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Xem lịch học",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                }
-            }
-
-            // Thông tin khóa học và học kỳ khi có dữ liệu
-            if (fetchState is FetchState.Success) {
-                val student = (fetchState as FetchState.Success).student
-                Divider(modifier = Modifier.padding(horizontal = 16.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    CourseInfoItem(
-                        label = "Niên khoá",
-                        value = "K${student.studentId.take(2)}",
-                        icon = Icons.Filled.Info
-                    )
+                        ) {
+                            CourseInfoItem(
+                                label = stringResource(R.string.academic_year),
+                                value = "K${student.studentId.take(2)}",
+                                icon = Icons.Filled.AccountBox
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -333,34 +298,35 @@ private fun CourseInfoItem(
     value: String,
     icon: ImageVector
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color(0xFF1976D2),
+            tint = Color(0xFFFFFFFF),
             modifier = Modifier.size(24.dp)
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.White
         )
 
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.White,
         )
     }
 }
 
 @Composable
-private fun StudentDetailsSection(student: Student, accentColor: Color) {
+private fun StudentDetailsSection(student: Student) {
     AnimatedVisibility(
         visible = true,
         enter = fadeIn(),
@@ -371,25 +337,28 @@ private fun StudentDetailsSection(student: Student, accentColor: Color) {
         ) {
             // Thông tin cá nhân
             InfoCard(
-                title = "Thông tin cá nhân",
+                title = stringResource(R.string.student_info),
                 content = {
                     InfoItem(
-                        icon = Icons.Outlined.Person,
-                        label = "Họ và tên",
-                        value = student.studentName?.toString() ?: "Không có thông tin",
-                        accentColor = accentColor
+                        icon = Icons.Filled.Person,
+                        label = stringResource(R.string.full_name),
+                        value = student.studentName?.toString()
+                            ?: (stringResource(R.string.no_info)),
+                        accentColor = MaterialTheme.colorScheme.onBackground
                     )
                     InfoItem(
-                        icon = Icons.Outlined.Person,
-                        label = "Ngày sinh",
-                        value = student.birthDate?.toString() ?: "Không có thông tin",
-                        accentColor = accentColor
+                        icon = Icons.Filled.DateRange,
+                        label = stringResource(R.string.date_of_birth),
+                        value = student.birthDate?.toString() ?: (stringResource(R.string.no_info)),
+                        accentColor = MaterialTheme.colorScheme.onBackground
+
                     )
                     InfoItem(
-                        icon = Icons.Outlined.Person,
-                        label = "Giới tính",
-                        value = student.sex?.toString() ?: "Không có thông tin",
-                        accentColor = accentColor
+                        icon = Icons.Filled.Person,
+                        label = stringResource(R.string.sex),
+                        value = student.sex?.toString() ?: (stringResource(R.string.no_info)),
+                        accentColor = MaterialTheme.colorScheme.onBackground
+
                     )
                 }
             )
@@ -398,25 +367,25 @@ private fun StudentDetailsSection(student: Student, accentColor: Color) {
 
             // Thông tin liên hệ
             InfoCard(
-                title = "Thông tin liên hệ",
+                title = stringResource(R.string.contact_information),
                 content = {
                     InfoItem(
-                        icon = Icons.Outlined.Phone,
-                        label = "Điện thoại nhà",
-                        value = student.phone?.toString() ?: "Không có thông tin",
-                        accentColor = accentColor
+                        icon = Icons.Filled.Phone,
+                        label = stringResource(R.string.phone_number),
+                        value = student.phone?.toString() ?: stringResource(R.string.no_info),
+                        accentColor = MaterialTheme.colorScheme.onBackground
                     )
                     InfoItem(
-                        icon = Icons.Outlined.Phone,
-                        label = "Điện thoại cá nhân",
-                        value = student.userPhone?.toString() ?: "Không có thông tin",
-                        accentColor = accentColor
+                        icon = Icons.Filled.Phone,
+                        label = stringResource(R.string.phone_number),
+                        value = student.userPhone?.toString() ?: stringResource(R.string.no_info),
+                        accentColor = MaterialTheme.colorScheme.onBackground
                     )
                     InfoItem(
-                        icon = Icons.Outlined.Email,
-                        label = "Email",
-                        value = student.email?.toString() ?: "Không có thông tin",
-                        accentColor = accentColor
+                        icon = Icons.Filled.Email,
+                        label = stringResource(R.string.email),
+                        value = student.email?.toString() ?: stringResource(R.string.no_info),
+                        accentColor = MaterialTheme.colorScheme.onBackground
                     )
                 }
             )
@@ -425,19 +394,20 @@ private fun StudentDetailsSection(student: Student, accentColor: Color) {
 
             // Thông tin địa chỉ
             InfoCard(
-                title = "Thông tin địa chỉ",
+                title = stringResource(R.string.address_info),
                 content = {
                     InfoItem(
-                        icon = Icons.Outlined.Place,
-                        label = "Nơi sinh",
-                        value = student.address?.toString() ?: "Không có thông tin",
-                        accentColor = accentColor
+                        icon = Icons.Filled.Place,
+                        label = stringResource(R.string.date_of_birth),
+                        value = student.address?.toString() ?: stringResource(R.string.no_info),
+                        accentColor = MaterialTheme.colorScheme.onBackground
                     )
                     InfoItem(
-                        icon = Icons.Outlined.Place,
-                        label = "Địa chỉ hiện tại",
-                        value = student.detailAddress?.toString() ?: "Không có thông tin",
-                        accentColor = accentColor
+                        icon = Icons.Filled.Place,
+                        label = stringResource(R.string.address_info),
+                        value = student.detailAddress?.toString()
+                            ?: stringResource(R.string.no_info),
+                        accentColor = MaterialTheme.colorScheme.onBackground
                     )
                 }
             )
@@ -556,7 +526,12 @@ private fun ErrorStateSection(message: String, onRetryClick: () -> Unit, primary
             onClick = onRetryClick,
             border = ButtonDefaults.outlinedButtonBorder.copy(
                 width = 1.5.dp,
-                brush = Brush.horizontalGradient(listOf(primaryColor, primaryColor.copy(alpha = 0.7f)))
+                brush = Brush.horizontalGradient(
+                    listOf(
+                        primaryColor,
+                        primaryColor.copy(alpha = 0.7f)
+                    )
+                )
             ),
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.height(48.dp)
@@ -578,7 +553,7 @@ private fun InfoCard(title: String, content: @Composable () -> Unit) {
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
