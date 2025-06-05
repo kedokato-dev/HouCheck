@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -182,7 +183,7 @@ fun LoginScreenContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -202,7 +203,7 @@ fun LoginScreenContent(
             )
 
             Text(
-                text = "My HOU",
+                text = stringResource(R.string.app_title),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = HNOUDarkBlue,
@@ -210,7 +211,7 @@ fun LoginScreenContent(
             )
 
             Text(
-                text = "Nhanh chóng - Tiện lợi - Hiệu quả",
+                text = stringResource(R.string.slogan),
                 style = MaterialTheme.typography.titleMedium,
                 color = HNOULightBlue,
                 textAlign = TextAlign.Center,
@@ -224,7 +225,7 @@ fun LoginScreenContent(
                 shape = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White
+                    MaterialTheme.colorScheme.background
                 )
             ) {
                 Column(
@@ -244,7 +245,7 @@ fun LoginScreenContent(
                     OutlinedTextField(
                         value = username,
                         onValueChange = onUsernameChange,
-                        label = { Text("Mã sinh viên") },
+                        label = { Text(stringResource(R.string.username)) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_person),
@@ -266,7 +267,7 @@ fun LoginScreenContent(
                     OutlinedTextField(
                         value = password,
                         onValueChange = onPasswordChange,
-                        label = { Text("Mật khẩu") },
+                        label = { Text(stringResource(R.string.password)) },
                         leadingIcon = {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_lock),
@@ -311,9 +312,10 @@ fun LoginScreenContent(
                             )
                         )
                         Text(
-                            text = "Ghi nhớ đăng nhập",
+                            text = stringResource(R.string.remember_me),
                             style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(start = 8.dp)
+                            modifier = Modifier.padding(start = 8.dp),
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
 
@@ -338,25 +340,39 @@ fun LoginScreenContent(
                             )
                         } else {
                             Text(
-                                "ĐĂNG NHẬP",
+                                stringResource(R.string.login),
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(text = BuildConfig.VERSION , fontSize = 12.sp, color = Color.Gray)
+                    Text(
+                        text = BuildConfig.VERSION,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Liên hệ phòng đào tạo nếu bạn gặp vấn đề khi đăng nhập",
+                text = stringResource(R.string.help),
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = stringResource(R.string.terms_of_use),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 32.dp)
             )

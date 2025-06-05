@@ -43,4 +43,14 @@
     <!-- Settings -->
     <string name="settings">Cài đặt</string>
     <string name="notifications">Thông báo</string>
+
+    <!--    Login-->
+    <string name="remember_me">Nhớ mật khẩu</string>
+    <string name="login">Đăng nhập</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="username">Mã sinh viên</string>
+    <string name="password">Mật khẩu</string>
+    <string name="slogan">Trợ lý học tập toàn diện của bạn</string>
+    <string name="help">Liên hệ phòng đào tạo nếu bạn gặp vấn đề về đăng nhập</string>
+    <string name="terms_of_use">Điều khoản sử dụng</string>
 </resources>
