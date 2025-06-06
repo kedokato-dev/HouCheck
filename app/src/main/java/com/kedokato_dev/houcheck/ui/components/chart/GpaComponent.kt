@@ -110,7 +110,7 @@ fun GPASummarySection(score: Score) {
                     GPAInfoItem(
                         label = "GPA (Thang 10)",
                         value = score.gpa10Current,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -189,7 +189,7 @@ fun GPAInfoItem(label: String, value: Any, color: Color) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = value.toString(),

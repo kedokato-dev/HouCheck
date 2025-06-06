@@ -3,6 +3,7 @@ package com.kedokato_dev.houcheck.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,8 +21,8 @@ fun LoadingComponent(
     subtitle: String = "Vui lòng chờ trong giây lát",
     verticalPadding: Int = 64,
     progressIndicatorSize: Int = 56,
-    titleColor: Color = Color(0xFF555555),
-    subtitleColor: Color = Color.Gray
+    titleColor: Color = MaterialTheme.colorScheme.onBackground,
+    subtitleColor: Color = MaterialTheme.colorScheme.onBackground
 ) {
     Column(
         modifier = Modifier

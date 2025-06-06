@@ -51,7 +51,7 @@ fun GradeDistributionSection(listScoreResult: List<CourseResultEntity>) {
                 Text(
                     text = "Chưa có dữ liệu về điểm chữ các môn học",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
             }
         }
@@ -142,9 +142,9 @@ fun GradeDistributionSection(listScoreResult: List<CourseResultEntity>) {
             // Legend section showing total count
             Text(
                 text = "Tổng số môn đã có điểm: $totalGradedCourses môn",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -173,7 +173,7 @@ fun GradeDistributionPieChart(
     )
     
     // Default color for unknown grades
-    val defaultColor = Color(0xFF607D8B).toArgb() // Blue Grey
+    val defaultColor = MaterialTheme.colorScheme.onSurface.toArgb() // Blue Grey
     
     AndroidView(
         modifier = Modifier.fillMaxSize(),

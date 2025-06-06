@@ -398,13 +398,13 @@ private fun StudentDetailsSection(student: Student) {
                 content = {
                     InfoItem(
                         icon = Icons.Filled.Place,
-                        label = stringResource(R.string.date_of_birth),
+                        label = stringResource(R.string.address),
                         value = student.address?.toString() ?: stringResource(R.string.no_info),
                         accentColor = MaterialTheme.colorScheme.onBackground
                     )
                     InfoItem(
                         icon = Icons.Filled.Place,
-                        label = stringResource(R.string.address_info),
+                        label = stringResource(R.string.address_parent),
                         value = student.detailAddress?.toString()
                             ?: stringResource(R.string.no_info),
                         accentColor = MaterialTheme.colorScheme.onBackground

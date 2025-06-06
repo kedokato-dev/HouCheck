@@ -487,7 +487,7 @@ fun FeatureGrid(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         userScrollEnabled = false, // Disable scrolling since we're inside a scrollable Column
-        modifier = Modifier.height((features.size / 4 * 100).dp) // Dynamic height based on items
+        modifier = Modifier.height((features.size / 4 * 110).dp) // Dynamic height based on items
     ) {
         items(features) { feature ->
             EnhancedFeatureGridItem(feature) {

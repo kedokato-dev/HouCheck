@@ -65,9 +65,54 @@
     <string name="email">Email</string>
     <string name="academic_year">Niên khóa: </string>
     <string name="contact_information">Thông tin liên hệ</string>
-    <string name="address_info">Thông tin liên hệ</string>
+    <string name="address_info">Thông tin địa chỉ</string>
     <string name="phone_number_parent">Số điện thoại nhà</string>
     <string name="address_parent">Nơi chôn rau cắt rốn</string>
+
+    <!-- Week Schedule -->
+    <string name="week_schedule">Lịch tuần</string>
+    <string name="load_week_schedule">Đang tải thông tin lịch tuần</string>
+    <string name="no_class_schedule">Không có lịch học cho ngày này</string>
+    <string name="week_schedule_error">Lỗi tải lịch tuần</string>
+    <string name="learn_normal">Học bình thường</string>
+    <string name="make_up_lessons">Học bù</string>
+    <string name="leave_school">Nghỉ học</string>
+    <string name="morning">Sáng</string>
+    <string name="afternoon">Chiều</string>
+    <string name="evening">Tối</string>
+
+    <!--  Training Score  -->
+    <string name="training_score_title">Lịch sử điểm rèn luyện</string>
+    <string name="semester">Học kỳ </string>
+    <string name="rating">Xếp loại: </string>
+    <string name="good">Tốt</string>
+    <string name="excellent">Xuất xắc</string>
+    <string name="average_mid">Trung bình khá</string>
+    <string name="middling">Khá</string>
+    <string name="average">Trung bình</string>
+    <string name="poor">Yếu</string>
+    <string name="other">Khác</string>
+    <string name="training_score_error">Lỗi tải điểm rèn luyện</string>
+    <string name="training_score_no_data">Chưa có dữ liệu điểm rèn luyện</string>
+
+
+
+    <!--  Error  -->
+    <string name="error">Lỗi</string>
+    <string name="network_error">Lỗi mạng</string>
+    <string name="server_error">Lỗi máy chủ</string>
+    <string name="unknown_error">Lỗi không xác định</string>
+    <string name="retry">Thử lại</string>
+    <string name="loading">Đang tải...</string>
+    <string name="loading_data">Đang tải dữ liệu...</string>
+    <string name="no_internet_connection">Không có kết nối Internet</string>
+    <string name="check_internet_connection">Vui lòng kiểm tra kết nối Internet của bạn</string>
+    <string name="data_not_found">Không tìm thấy dữ liệu</string>
+    <string name="data_loading_error">Lỗi tải dữ liệu</string>
+    <string name="data_empty">Dữ liệu trống</string>
+    <string name="load">Tải dữ liệu</string>
+
+
 
 
 

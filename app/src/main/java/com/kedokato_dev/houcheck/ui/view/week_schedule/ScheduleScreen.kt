@@ -26,8 +26,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -53,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,6 +66,7 @@ import com.kedokato_dev.houcheck.network.model.DaySchedule
 import com.kedokato_dev.houcheck.ui.components.LoadingComponent
 import com.kedokato_dev.houcheck.ui.state.UiState
 import com.kedokato_dev.houcheck.ui.theme.HNOUDarkBlue
+import com.kedokato_dev.houcheck.ui.theme.HNOULightBlue
 import com.kedokato_dev.houcheck.ui.view.login.AuthViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -154,8 +156,8 @@ fun ScheduleScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     LoadingComponent(
-                        primaryColor = HNOUDarkBlue,
-                        "Đang tải thông tin thời khoá biểu"
+                        primaryColor = HNOULightBlue,
+                        stringResource(R.string.load_week_schedule)
                     )
                 }
             }
@@ -194,7 +196,7 @@ fun ScheduleScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Lịch",
+                            text = stringResource(R.string.week_schedule),
                             color = Color.White,
                             style = MaterialTheme.typography.titleMedium
                         )
@@ -451,7 +453,7 @@ fun ModernScheduleContent(
 
                 // Kiểm tra xem chuỗi ngày có chứa selectedDateString không
                 val isSelectedDay = day.contains(selectedDateString)
-                Log.d("ScheduleScreen", "Day: $day, Looking for: $selectedDateString, Selected: $isSelectedDay")
+//                Log.d("ScheduleScreen", "Day: $day, Looking for: $selectedDateString, Selected: $isSelectedDay")
 
                 Column(
                     modifier = Modifier
@@ -472,7 +474,7 @@ fun ModernScheduleContent(
                     Text(
                         text = dayDate,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
@@ -501,7 +503,7 @@ fun EmptyDayCard() {
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.2f)
         )
     ) {
         Box(
@@ -511,9 +513,9 @@ fun EmptyDayCard() {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Không có lịch học cho ngày này",
+                text = stringResource(R.string.no_class_schedule),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -521,7 +523,7 @@ fun EmptyDayCard() {
 
 @Composable
 fun ModernClassCard(classInfo: ClassInfo) {
-    // Simplified color logic using only three colors
+    // Simplified color logic using only three colors\
     val subjectColor = getClassStatusColor(classInfo.session)
 
     Card(
@@ -570,7 +572,7 @@ fun ModernClassCard(classInfo: ClassInfo) {
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Medium,
-                                color = Color.Black
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
@@ -596,18 +598,18 @@ fun ModernClassCard(classInfo: ClassInfo) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Person,
+                            imageVector = Icons.Filled.Person,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
 
                         Spacer(modifier = Modifier.width(4.dp))
 
                         Text(
-                            text = classInfo.teacher,
+                            text = classInfo.teacher?: stringResource(R.string.no_info),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -617,14 +619,14 @@ fun ModernClassCard(classInfo: ClassInfo) {
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .background(
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f),
                             shape = RoundedCornerShape(8.dp)
                         )
-                        .padding(horizontal = 12.dp, vertical = 6.dp) // Increased padding for better touch targets
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.LocationOn,
-                        contentDescription = "Location", // Added content description for accessibility
+                        imageVector = Icons.Filled.LocationOn,
+                        contentDescription = "Location",
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -635,7 +637,7 @@ fun ModernClassCard(classInfo: ClassInfo) {
                         text = classInfo.room,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     Spacer(modifier = Modifier.width(8.dp)) // Added proper spacing between text elements
@@ -664,7 +666,7 @@ fun ModernClassCard(classInfo: ClassInfo) {
                         text =  classInfo.timeSlot,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -698,7 +700,7 @@ private fun SessionTypeTag(session: String) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Medium,
             color = textColor,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
