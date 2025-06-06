@@ -113,6 +113,38 @@
     <string name="load">Tải dữ liệu</string>
 
 
+    <!--  Feedback  -->
+    <string name="feedback">Phản hồi</string>
+    <string name="feedback_description">Chúng tôi rất mong nhận được phản hồi của bạn để cải thiện ứng dụng</string>
+    <string name="feedback_no_data">Chưa có phản hồi nào</string>
+    <string name="all_feedback_send">Lịch sử phản hồi</string>
+    <string name="feedback_content">Nội dung phản hồi</string>
+    <string name="send_feedback">Gửi phản hồi</string>
+    <string name="feedback_success">Cảm ơn bạn đã gửi phản hồi!</string>
+    <string name="edit_feedback">Chỉnh sửa phản hồi</string>
+    <string name="feedback_placeholder">Nhập phản hồi của bạn tại đây...</string>
+    <string name="edit_feedback_content">Nội dung chỉnh sửa</string>
+    <string name="feedback_content_empty">Vui lòng nhập thông tin phản hồi!</string>
+    <string name="feedback_error">Lỗi gửi phản hồi. Vui lòng thử lại sau.</string>
+
+
+
+    <!--  Tái sử dụng  -->
+    <string name="edit">Sửa</string>
+    <string name="save">Lưu</string>
+    <string name="cancel">Hủy</string>
+    <string name="delete">Xóa</string>
+    <string name="confirm_delete">Bạn có chắc chắn muốn xóa không?</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+    <string name="success">Thành công</string>
+    <string name="failure">Thất bại</string>
+    <string name="update">Cập nhật</string>
+    <string name="update_success">Cập nhật thành công</string>
+    <string name="update_failure">Cập nhật thất bại</string>
+
+
+
 
 
 

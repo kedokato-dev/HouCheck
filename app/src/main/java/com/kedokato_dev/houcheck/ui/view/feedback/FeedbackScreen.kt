@@ -3,6 +3,7 @@ package com.kedokato_dev.houcheck.ui.view.feedback
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,12 +55,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.kedokato_dev.houcheck.R
 import com.kedokato_dev.houcheck.local.dao.AppDatabase
 import com.kedokato_dev.houcheck.local.entity.FeedbackEntity
 import com.kedokato_dev.houcheck.network.model.Feedback
@@ -131,7 +134,7 @@ fun FeedbackScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Phản hồi") },
+                title = { Text(stringResource(R.string.feedback)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = HNOUDarkBlue,
                     titleContentColor = Color.White,
@@ -155,18 +158,19 @@ fun FeedbackScreen(navController: NavHostController) {
         ) {
             if (isEditing) {
                 Text(
-                    text = "Chỉnh sửa phản hồi",
+                    text = stringResource(R.string.edit_feedback),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = HNOUDarkBlue
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
             
             OutlinedTextField(
                 value = message,
                 onValueChange = { message = it },
-                label = { Text(if (isEditing) "Nội dung chỉnh sửa" else "Thông tin phản hồi") },
-                placeholder = { Text("Nhập thông tin phản hồi") },
+                label = { Text(if (isEditing) stringResource(R.string.edit_feedback_content)
+                else stringResource(R.string.feedback_content) ) },
+                placeholder = { Text(stringResource(R.string.feedback_placeholder)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
@@ -182,11 +186,11 @@ fun FeedbackScreen(navController: NavHostController) {
                         onClick = { resetEditState() },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Gray,
+                            containerColor = Color.Red,
                             contentColor = Color.White
                         )
                     ) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.cancel))
                     }
                     
                     Spacer(modifier = Modifier.width(8.dp))
@@ -207,10 +211,10 @@ fun FeedbackScreen(navController: NavHostController) {
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = HNOULightBlue,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                            contentColor = Color.White
                         )
                     ) {
-                        Text("Cập nhật")
+                        Text(stringResource(R.string.update))
                     }
                 } else {
                     Button(
@@ -227,10 +231,10 @@ fun FeedbackScreen(navController: NavHostController) {
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = HNOULightBlue,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
+                            contentColor = Color.White
                         )
                     ) {
-                        Text("Gửi phản hồi")
+                        Text(stringResource(R.string.send_feedback))
                     }
                 }
             }
@@ -245,18 +249,18 @@ fun FeedbackScreen(navController: NavHostController) {
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Chưa có phản hồi nào",
+                            text = stringResource(R.string.feedback_no_data),
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 } else {
                     Text(
-                        text = "Lịch sử phản hồi",
+                        text = stringResource(R.string.all_feedback_send),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = HNOUDarkBlue
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     LazyColumn(
                         modifier = Modifier.weight(1f),
@@ -305,6 +309,7 @@ fun FeedbackItem(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
+            .background(MaterialTheme.colorScheme.surface)
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(8.dp)
@@ -322,6 +327,7 @@ fun FeedbackItem(
                 Text(
                     text = feedback.name,
                     style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
@@ -331,7 +337,7 @@ fun FeedbackItem(
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = "More options",
-                            tint = Color.Gray
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                     
@@ -340,7 +346,7 @@ fun FeedbackItem(
                         onDismissRequest = { showDropdownMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Chỉnh sửa") },
+                            text = { Text(stringResource(R.string.edit)) },
                             leadingIcon = { 
                                 Icon(
                                     Icons.Default.Edit,
@@ -355,7 +361,7 @@ fun FeedbackItem(
                         )
 
                         DropdownMenuItem(
-                            text = { Text("Xóa") },
+                            text = { Text(stringResource(R.string.delete)) },
                             leadingIcon = {
                                 Icon(
                                     Icons.Default.Delete,
@@ -383,11 +389,10 @@ fun FeedbackItem(
                     modifier = Modifier.size(16.dp),
                     tint = Color.Gray
                 )
-                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = feedback.createdAt,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
             
